@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MIDI Switcher Web Editor Final</title>
+    <title>MIDI Switcher Web Editor</title>
     <style>
         :root {
             --bg-color: #0a0a0a;
@@ -16,58 +16,38 @@
             --border: #333333;
         }
         * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
-        body { background-color: #222; color: var(--text-main); margin: 0; display: flex; flex-direction: column; align-items: center; height: 100vh; overflow: hidden; }
-        
-        /* === デバイスプレビュー用コントロールバー === */
-        .debug-bar { width: 100%; background: #000; padding: 10px; text-align: center; border-bottom: 2px solid var(--primary); flex-shrink: 0; z-index: 1000; display: flex; justify-content: center; gap: 15px;}
-        .btn-debug { background: #333; color: #fff; border: 1px solid #555; padding: 8px 20px; border-radius: 20px; cursor: pointer; font-weight: bold; transition: 0.2s; display: flex; align-items: center; gap: 8px;}
-        .btn-debug.active { background: var(--primary); color: #000; }
+        body { background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 15px; }
 
-        /* === アプリケーションフレーム === */
-        #appFrame {
-            background-color: var(--bg-color);
-            transition: all 0.3s ease;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-        }
-        /* モバイルモード (幅をスマホ実機寄りにしつつ枠を維持) */
-        .frame-mobile { width: 100%; max-width: 430px; height: 844px; border: 12px solid #111; border-radius: 35px; margin-top: 20px; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-        .frame-mobile .main-grid { padding: 15px; }
-        /* タブレットモード */
-        .frame-tablet { width: 100%; max-width: 950px; height: 1080px; border: 16px solid #111; border-radius: 25px; margin-top: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-        .frame-tablet .main-grid { height: calc(100% - 60px); padding: 15px; }
-        /* PCモード (横幅を100%最大限に活かす) */
-        .frame-pc { width: 100%; max-width: 100%; height: 100%; border: none; border-radius: 0; margin-top: 0; padding: 20px; overflow: hidden; }
-        .frame-pc .main-grid { height: calc(100% - 70px); }
-
-        /* === 共通ハイブリッド・グリッドレイアウト === */
+        /* === ハイブリッド・グリッドレイアウト === */
         .main-grid { 
             display: flex; 
             flex-direction: column; 
             gap: 15px; 
             width: 100%; 
-            max-width: 1600px; /* 横方向への最大限の拡大を許可 */
+            max-width: 1600px; 
             margin: 0 auto;
         }
         
-        /* ★ スマホ時の並び順制御 (Nav -> Edit -> Accordion) */
+        /* スマホ時の並び順制御 ＆ Android下部余白対策 */
         .nav-area { order: 1; }
         .edit-area-wrapper { order: 2; display: flex; flex-direction: column; gap: 15px; }
-        .accordion-area { order: 3; display: flex; flex-direction: column; gap: 15px; }
+        .accordion-area { order: 3; display: flex; flex-direction: column; gap: 15px; padding-bottom: 50px; /* ★ Android被り対策 */ }
 
-        /* タブレット＆PC用 左右カラム制御 */
+        /* タブレット＆PC用 左右カラム制御 (フルスクリーン固定) */
         @media (min-width: 768px) {
+            body { height: 100vh; overflow: hidden; }
             .main-grid {
                 display: grid;
-                grid-template-columns: minmax(300px, 3fr) minmax(400px, 5fr); /* 右のエディターを少し広めに */
+                grid-template-columns: minmax(300px, 3fr) minmax(400px, 5fr);
                 grid-template-rows: auto minmax(0, 1fr);
+                height: calc(100vh - 70px);
             }
             .nav-area { grid-column: 1; grid-row: 1; margin-bottom: 0 !important; }
             .accordion-area { 
                 grid-column: 1; grid-row: 2; 
                 overflow-y: auto; 
                 padding-right: 5px; 
+                padding-bottom: 10px; /* PC時は下部余白を減らす */
             }
             .edit-area-wrapper { 
                 grid-column: 2; grid-row: 1 / 3; 
@@ -89,13 +69,14 @@
         ::-webkit-scrollbar-track { background: transparent; }
 
         /* === アプリ内UI要素 === */
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border); padding-bottom: 10px; flex-shrink: 0;}
+        /* ★ スクロールバー被り対策で右側に少しPaddingを追加 */
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border); padding-bottom: 10px; padding-right: 10px; flex-shrink: 0;}
         .header h1 { font-size: 1.3rem; margin: 0; color: var(--primary); letter-spacing: 1px; }
         .btn-connect { background-color: var(--primary-dim); color: var(--text-main); border: 1px solid var(--primary); padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; }
         .btn-connect.connected { background-color: var(--primary); color: #000; }
 
         .section { background-color: var(--surface); border-radius: 10px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); border-top: 3px solid #2a2a2a; }
-        .frame-tablet .section, .frame-pc .section { margin-bottom: 0; }
+        @media (min-width: 768px) { .section { margin-bottom: 0; } }
 
         /* 折りたたみ（アコーディオン）ヘッダー */
         .accordion-header { background: #000; padding: 12px 15px; border-radius: 8px; font-weight: bold; color: var(--primary); display: flex; justify-content: space-between; align-items: center; cursor: pointer; border: 1px solid var(--border); transition: 0.2s; margin-bottom: 10px;}
@@ -132,7 +113,6 @@
         
         .cc-block { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #222; }
         
-        /* ★ Saveボタン (エディター枠の一番下) */
         .btn-save { width: 100%; background: var(--primary-dim); border: 1px solid var(--primary); color: #fff; padding: 18px; font-size: 1.2rem; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; flex-shrink: 0; box-shadow: 0 -4px 10px rgba(0,0,0,0.5);}
         .btn-save:active { background: var(--primary); color: #000; transform: scale(0.98); }
 
@@ -143,161 +123,137 @@
 
         .hidden { display: none !important; }
         .use-checkbox { width: 22px; height: 22px; accent-color: var(--primary); cursor: pointer; }
+        
+        #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); color: var(--primary); display: flex; justify-content: center; align-items: center; font-size: 1.5rem; font-weight: bold; z-index: 9999; }
     </style>
 </head>
 <body>
 
-<div class="debug-bar">
-    <button class="btn-debug" id="btnDebugMobile" onclick="setDevice('mobile')">📱 Mobile</button>
-    <button class="btn-debug" id="btnDebugTablet" onclick="setDevice('tablet')">💊 Tablet</button>
-    <button class="btn-debug active" id="btnDebugPC" onclick="setDevice('pc')">💻 PC / Mac</button>
+<div id="loadingOverlay" class="hidden">Loading Device Data...</div>
+
+<div class="header" style="max-width: 1600px; margin: 0 auto 15px auto; width: 100%;">
+    <h1>MIDI Switcher UI</h1>
+    <button class="btn-connect" id="btnConnect" onclick="toggleConnect()">Connect BLE</button>
 </div>
 
-<div id="appFrame" class="frame-pc">
+<div class="main-grid">
     
-    <div class="header" style="max-width: 1600px; margin: 0 auto; width: 100%;">
-        <h1>MIDI Switcher UI</h1>
-        <button class="btn-connect" id="btnConnect" onclick="toggleConnect()">Connect BLE</button>
+    <div class="nav-area section">
+        <div class="bank-controls">
+            <button class="btn-small" onclick="changeBank(-1)">◀ Bank</button>
+            <span id="displayBank" style="font-size: 1.4rem; font-weight: bold; color: var(--primary);">Bank 1</span>
+            <button class="btn-small" onclick="changeBank(1)">Bank ▶</button>
+        </div>
+        <div class="nav-grid" id="presetGrid"></div>
+        <div class="title-edit">
+            <input type="text" id="presetTitle" maxlength="16" placeholder="FRONT TITLE (16 CHARS)" onchange="updateTitle()">
+        </div>
+        <div style="font-size: 0.8rem; color: var(--text-sub); text-align: center; margin-top: 5px;">※Max 16 Characters</div>
     </div>
 
-    <div class="main-grid">
+    <div class="edit-area-wrapper">
+        <div class="edit-area section">
+            <div class="tabs">
+                <div class="tab active" id="tabFront" onclick="switchTab('front')">Front</div>
+                <div class="tab" id="tabRear" onclick="switchTab('rear')">Rear</div>
+            </div>
+
+            <div id="rearControls" class="hidden">
+                <div class="toggle-row">
+                    <span style="font-weight: bold; color: #fff;">Use Rear Setting</span>
+                    <input type="checkbox" class="use-checkbox" id="useRearToggle" onchange="toggleUseRear()">
+                </div>
+                <div class="toggle-row" style="margin-bottom: 0;">
+                    <span style="font-weight: bold; color: var(--text-sub); font-size: 0.95rem;">Switch Type</span>
+                    <div style="display: flex; flex: 1; margin-left: 15px;">
+                        <button class="type-btn" id="btnTog" onclick="setRearType('Tog')">Toggle</button>
+                        <button class="type-btn" id="btnMom" onclick="setRearType('Mom')">Momentary</button>
+                    </div>
+                </div>
+                <div class="toggle-row" style="margin-top: 15px; border-top: 1px dashed #444; padding-top: 15px;">
+                    <span style="font-weight: bold; color: var(--primary);">Custom Rear Title</span>
+                    <input type="checkbox" class="use-checkbox" id="useRearTitleToggle" onchange="toggleRearTitle()">
+                </div>
+                <div class="title-edit" id="rearTitleContainer" style="display:none; margin-top: 5px;">
+                    <input type="text" id="rearTitleInput" maxlength="16" placeholder="REAR TITLE (16 CHARS)" onchange="updateRearTitle()">
+                </div>
+            </div>
+
+            <div id="editorContent">
+                <div class="param-row">
+                    <span class="param-label">PC Num</span>
+                    <input type="range" class="param-slider" id="pcSlider" min="0" max="127" oninput="updateActionParam('pc', this.value, true)">
+                    <input type="number" class="param-val" id="pcVal" min="0" max="127" oninput="updateActionParam('pc', this.value, false)">
+                </div>
+                <div class="param-row">
+                    <span class="param-label">U-PC</span>
+                    <input type="range" class="param-slider" id="upcSlider" min="0" max="127" oninput="updateActionParam('upc', this.value, true)">
+                    <input type="number" class="param-val" id="upcVal" min="0" max="127" oninput="updateActionParam('upc', this.value, false)">
+                </div>
+                
+                <hr style="border-color: var(--border); margin: 20px 0;">
+                <div style="font-size: 1.1rem; font-weight: bold; color: var(--primary); margin-bottom: 10px;">CC Config (1-8)</div>
+
+                <div id="ccContainer"></div>
+            </div>
+        </div>
+        <button class="btn-save" onclick="alert('デバイスのEEPROMに保存しました！\n（現在選択中のBank '+currentBank+'-'+currentPreset+'）')">💾 Save Preset to Device</button>
+    </div>
+
+    <div class="accordion-area">
+        <div class="section" style="padding: 10px;">
+            <div class="accordion-header" onclick="toggleAccordion('accPresetUtil')">
+                Preset Utilities <span id="accPresetUtil-arrow">▼</span>
+            </div>
+            <div class="accordion-content" id="accPresetUtil">
+                <div class="util-grid">
+                    <button class="btn-util" onclick="alert('Preset Swap')">🔄 Swap</button>
+                    <button class="btn-util" onclick="alert('Preset Copy')">📄 Copy</button>
+                    <button class="btn-util btn-danger" style="grid-column: span 2;" onclick="alert('Clear Preset')">🗑️ Clear Preset</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" style="padding: 10px;">
+            <div class="accordion-header" onclick="toggleAccordion('accGlobal')">
+                Global Settings <span id="accGlobal-arrow">▼</span>
+            </div>
+            <div class="accordion-content" id="accGlobal">
+                <div class="param-row">
+                    <span class="param-label" style="width: 80px;">MIDI CH</span>
+                    <input type="number" class="param-val" min="1" max="16" value="1" style="width: 100%;">
+                </div>
+                <div class="param-row">
+                    <span class="param-label" style="width: 80px;">Max Bank</span>
+                    <input type="number" class="param-val" min="1" max="9" value="9" style="width: 100%;">
+                </div>
+                <div class="toggle-row" style="margin-top: 15px;">
+                    <span style="font-weight: bold; color: var(--text-sub);">USB MIDI</span>
+                    <div style="display: flex; flex: 1; margin-left: 15px;">
+                        <button class="type-btn active">ON</button>
+                        <button class="type-btn">OFF</button>
+                    </div>
+                </div>
+            </div>
+        </div>
         
-        <div class="nav-area section" style="margin-bottom:0;">
-            <div class="bank-controls">
-                <button class="btn-small" onclick="changeBank(-1)">◀ Bank</button>
-                <span id="displayBank" style="font-size: 1.4rem; font-weight: bold; color: var(--primary);">Bank 1</span>
-                <button class="btn-small" onclick="changeBank(1)">Bank ▶</button>
+        <div class="section" style="padding: 10px;">
+            <div class="accordion-header" onclick="toggleAccordion('accBrowser')">
+                Browser Utilities <span id="accBrowser-arrow">▼</span>
             </div>
-            <div class="nav-grid" id="presetGrid"></div>
-            <div class="title-edit">
-                <input type="text" id="presetTitle" maxlength="16" placeholder="FRONT TITLE (16 CHARS)" onchange="updateTitle()">
-            </div>
-            <div style="font-size: 0.8rem; color: var(--text-sub); text-align: center; margin-top: 5px;">※Max 16 Characters</div>
-        </div>
-
-        <div class="edit-area-wrapper">
-            <div class="edit-area section">
-                <div class="tabs">
-                    <div class="tab active" id="tabFront" onclick="switchTab('front')">Front</div>
-                    <div class="tab" id="tabRear" onclick="switchTab('rear')">Rear</div>
-                </div>
-
-                <div id="rearControls" class="hidden">
-                    <div class="toggle-row">
-                        <span style="font-weight: bold; color: #fff;">Use Rear Setting</span>
-                        <input type="checkbox" class="use-checkbox" id="useRearToggle" onchange="toggleUseRear()">
-                    </div>
-                    <div class="toggle-row" style="margin-bottom: 0;">
-                        <span style="font-weight: bold; color: var(--text-sub); font-size: 0.95rem;">Switch Type</span>
-                        <div style="display: flex; flex: 1; margin-left: 15px;">
-                            <button class="type-btn" id="btnTog" onclick="setRearType('Tog')">Toggle</button>
-                            <button class="type-btn" id="btnMom" onclick="setRearType('Mom')">Momentary</button>
-                        </div>
-                    </div>
-                    <div class="toggle-row" style="margin-top: 15px; border-top: 1px dashed #444; padding-top: 15px;">
-                        <span style="font-weight: bold; color: var(--primary);">Custom Rear Title</span>
-                        <input type="checkbox" class="use-checkbox" id="useRearTitleToggle" onchange="toggleRearTitle()">
-                    </div>
-                    <div class="title-edit" id="rearTitleContainer" style="display:none; margin-top: 5px;">
-                        <input type="text" id="rearTitleInput" maxlength="16" placeholder="REAR TITLE (16 CHARS)" onchange="updateRearTitle()">
-                    </div>
-                </div>
-
-                <div id="editorContent">
-                    <div class="param-row">
-                        <span class="param-label">PC Num</span>
-                        <input type="range" class="param-slider" id="pcSlider" min="0" max="127" oninput="updateActionParam('pc', this.value, true)">
-                        <input type="number" class="param-val" id="pcVal" min="0" max="127" oninput="updateActionParam('pc', this.value, false)">
-                    </div>
-                    <div class="param-row">
-                        <span class="param-label">U-PC</span>
-                        <input type="range" class="param-slider" id="upcSlider" min="0" max="127" oninput="updateActionParam('upc', this.value, true)">
-                        <input type="number" class="param-val" id="upcVal" min="0" max="127" oninput="updateActionParam('upc', this.value, false)">
-                    </div>
-                    
-                    <hr style="border-color: var(--border); margin: 20px 0;">
-                    <div style="font-size: 1.1rem; font-weight: bold; color: var(--primary); margin-bottom: 10px;">CC Config (1-8)</div>
-
-                    <div id="ccContainer"></div>
-                </div>
-            </div>
-            <button class="btn-save" onclick="alert('デバイスのEEPROMに保存しました！\n（現在選択中のBank '+currentBank+'-'+currentPreset+'）')">💾 Save Preset to Device</button>
-        </div>
-
-        <div class="accordion-area">
-            <div class="section" style="padding: 10px;">
-                <div class="accordion-header" onclick="toggleAccordion('accPresetUtil')">
-                    Preset Utilities <span id="accPresetUtil-arrow">▼</span>
-                </div>
-                <div class="accordion-content" id="accPresetUtil">
-                    <div class="util-grid">
-                        <button class="btn-util" onclick="alert('Preset Swap')">🔄 Swap</button>
-                        <button class="btn-util" onclick="alert('Preset Copy')">📄 Copy</button>
-                        <button class="btn-util btn-danger" style="grid-column: span 2;" onclick="alert('Clear Preset')">🗑️ Clear Preset</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="section" style="padding: 10px;">
-                <div class="accordion-header" onclick="toggleAccordion('accGlobal')">
-                    Global Settings <span id="accGlobal-arrow">▼</span>
-                </div>
-                <div class="accordion-content" id="accGlobal">
-                    <div class="param-row">
-                        <span class="param-label" style="width: 80px;">MIDI CH</span>
-                        <input type="number" class="param-val" min="1" max="16" value="1" style="width: 100%;">
-                    </div>
-                    <div class="param-row">
-                        <span class="param-label" style="width: 80px;">Max Bank</span>
-                        <input type="number" class="param-val" min="1" max="9" value="9" style="width: 100%;">
-                    </div>
-                    <div class="toggle-row" style="margin-top: 15px;">
-                        <span style="font-weight: bold; color: var(--text-sub);">USB MIDI</span>
-                        <div style="display: flex; flex: 1; margin-left: 15px;">
-                            <button class="type-btn active">ON</button>
-                            <button class="type-btn">OFF</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="section" style="padding: 10px;">
-                <div class="accordion-header" onclick="toggleAccordion('accBrowser')">
-                    Browser Utilities <span id="accBrowser-arrow">▼</span>
-                </div>
-                <div class="accordion-content" id="accBrowser">
-                    <div class="util-grid">
-                        <button class="btn-util">📂 Backup All</button>
-                        <button class="btn-util">📥 Restore All</button>
-                        <button class="btn-util btn-danger" style="grid-column: span 2;">⚠️ Factory Reset</button>
-                    </div>
+            <div class="accordion-content" id="accBrowser">
+                <div class="util-grid">
+                    <button class="btn-util">📂 Backup All</button>
+                    <button class="btn-util">📥 Restore All</button>
+                    <button class="btn-util btn-danger" style="grid-column: span 2;">⚠️ Factory Reset</button>
                 </div>
             </div>
         </div>
-
     </div>
+
 </div>
 
 <script>
-    // ==========================================
-    // UI デバッグ・表示切り替えロジック
-    // ==========================================
-    function setDevice(mode) {
-        document.querySelectorAll('.btn-debug').forEach(b => b.classList.remove('active'));
-        const frame = document.getElementById('appFrame');
-        
-        if (mode === 'mobile') {
-            document.getElementById('btnDebugMobile').classList.add('active');
-            frame.className = 'frame-mobile';
-        } else if (mode === 'tablet') {
-            document.getElementById('btnDebugTablet').classList.add('active');
-            frame.className = 'frame-tablet';
-        } else {
-            document.getElementById('btnDebugPC').classList.add('active');
-            frame.className = 'frame-pc';
-        }
-    }
-
     function toggleAccordion(id) {
         const content = document.getElementById(id);
         const arrow = document.getElementById(id + '-arrow');
@@ -310,9 +266,6 @@
         }
     }
 
-    // ==========================================
-    // JS データ＆ロジック
-    // ==========================================
     let currentBank = 1; let currentPreset = 1; let currentTab = 'front';
     let appData = {};
 
