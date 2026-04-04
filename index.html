@@ -1,438 +1,528 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MIDI Switcher Web Editor V4.5</title>
-    <style>
-        :root {
-            --bg-color: #0a0a0a;
-            --surface: #1e1e1e;
-            --primary: #ffcc00; 
-            --primary-dim: #665200;
-            --text-main: #ffffff;
-            --text-sub: #aaaaaa;
-            --danger: #ff4757;
-            --border: #333333;
-        }
-        * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
-        
-        /* === スマホベース (デフォルト) === */
-        body { background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 15px; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MIDI Switcher Ultimate</title>
+  
+  <script>
+    const themes = [
+      { main: '#ffcc00', dim: '#b28e00', bg: 'rgba(255, 204, 0, 0.15)' }, // YELLOW
+      { main: '#ff3838', dim: '#b22727', bg: 'rgba(255, 56, 56, 0.15)' }, // RED
+      { main: '#2e66ff', dim: '#2047b2', bg: 'rgba(46, 102, 255, 0.15)' }, // BLUE
+      { main: '#7affff', dim: '#55b2b2', bg: 'rgba(122, 255, 255, 0.15)' }, // LIGHT BLUE
+      { main: '#4dff4d', dim: '#35b235', bg: 'rgba(77, 255, 77, 0.15)' }, // GREEN
+      { main: '#e375ff', dim: '#9e51b2', bg: 'rgba(227, 117, 255, 0.15)' }, // PURPLE
+      { main: '#ff8ff0', dim: '#b264a8', bg: 'rgba(255, 143, 240, 0.15)' }, // PINK
+      { main: '#a1a1a1', dim: '#707070', bg: 'rgba(161, 161, 161, 0.15)' }  // GRAY
+    ];
+    let currentThemeIdx = localStorage.getItem('savedThemeIdx') ? parseInt(localStorage.getItem('savedThemeIdx')) : 0;
+    const t = themes[currentThemeIdx];
+    document.documentElement.style.setProperty('--main-color', t.main);
+    document.documentElement.style.setProperty('--main-color-dim', t.dim);
+    document.documentElement.style.setProperty('--active-bg', t.bg);
 
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 15px; }
-        .header h1 { font-size: 1.3rem; margin: 0; color: var(--primary); letter-spacing: 1px; }
-        .btn-connect { background-color: var(--primary-dim); color: var(--text-main); border: 1px solid var(--primary); padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; }
-        .btn-connect.connected { background-color: var(--primary); color: #000; }
+    const isSmartphone = /iPhone|Android.*Mobile/i.test(navigator.userAgent);
+  </script>
 
-        .main-grid { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 1600px; margin: 0 auto; }
-        
-        /* スマホ時の並び順制御 */
-        .nav-area { order: 1; }
-        .edit-area-wrapper { order: 2; display: flex; flex-direction: column; gap: 15px; }
-        .accordion-area { order: 3; display: flex; flex-direction: column; gap: 15px; padding-bottom: 40px; }
+  <style>
+    :root {
+      --bg-base: #111111; --bg-panel: #1e1e1e; --bg-card: #252525; --bg-input: #000000;
+      --text-main: #f5f5f5; --text-muted: #aaaaaa; --border-color: #3a3a3a; --danger: #ff4444;
+    }
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: var(--bg-base); color: var(--text-main); margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; overflow-x: hidden; transition: background-color 0.3s, color 0.3s; }
+    
+    /* Header */
+    header { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-bottom: 2px solid var(--border-color); height: 60px; flex-shrink: 0; }
+    h1 { color: var(--main-color); font-size: 20px; margin: 0; text-transform: uppercase; cursor: pointer; user-select: none; transition: 0.3s; }
+    h1:active { transform: scale(0.95); opacity: 0.8; }
+    .status-badge { background: var(--bg-panel); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 8px; color: var(--main-color); border: 1px solid var(--main-color-dim); }
+    .status-dot { width: 10px; height: 10px; background: #ff4444; border-radius: 50%; }
+    .btn-connect { background: var(--main-color); color: #000; border: none; padding: 6px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; }
+    
+    /* Layout */
+    .app-container { display: flex; gap: 20px; padding: 20px; max-width: 1400px; margin: 0 auto; height: calc(100vh - 60px); align-items: stretch; overflow: hidden; }
+    
+    /* PC版: 左パネルは縮みやすく(3)、右パネルは維持(1) */
+    .left-panel { flex: 1 3 350px; display: flex; flex-direction: column; gap: 20px; overflow: hidden; }
+    .right-panel { flex: 2 1 600px; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; display: flex; flex-direction: column; overflow: hidden; }
+    
+    .left-scroll-area { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; padding-right: 5px; }
+    .left-scroll-area::-webkit-scrollbar { width: 6px; }
+    .left-scroll-area::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
 
-        /* === ★ PC & タブレット 完全1画面固定レイアウト === */
-        @media (min-width: 768px) {
-            body {
-                height: 100vh; /* 画面の高さを100%に固定 */
-                overflow: hidden; /* 画面全体のスクロールを絶対禁止 */
-                display: flex;
-                flex-direction: column;
-            }
-            .header { flex-shrink: 0; /* ヘッダーが潰れないようにする */ margin-bottom: 15px; padding-right: 10px;}
-            
-            .main-grid {
-                flex-grow: 1; /* 残りの高さをすべて占有 */
-                min-height: 0; /* 子要素のはみ出しを許可して内部スクロールさせる魔法 */
-                display: grid;
-                grid-template-columns: minmax(300px, 3fr) minmax(400px, 5fr);
-                grid-template-rows: auto minmax(0, 1fr);
-                gap: 15px;
-            }
+    /* Bank & Preset Grid */
+    .bank-ctrl { display: flex; justify-content: space-between; align-items: center; background: var(--bg-panel); padding: 10px; border-radius: 6px; border: 1px solid var(--border-color); flex-shrink: 0; }
+    .btn-bank { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); padding: 8px 15px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+    .bank-disp { font-size: 20px; font-weight: bold; color: var(--main-color); }
+    
+    .card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; flex-shrink: 0; }
+    .preset-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .preset-btn { background: var(--bg-card); color: var(--text-main); border: 2px solid var(--border-color); border-radius: 8px; padding: 10px 5px; font-weight: bold; cursor: pointer; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; aspect-ratio: 1/1; transition: 0.3s; min-width: 0; overflow: hidden; }
+    .preset-btn.active { border-color: var(--main-color); color: var(--main-color); background: var(--active-bg); }
+    .preset-btn .tile-num { font-size: 24px; font-weight: 900; line-height: 1; margin-bottom: 4px; }
+    .preset-subtitle { width: 100%; display: block; font-size: 10px; color: var(--text-muted); margin-top: 2px; font-weight: normal; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 2px; text-transform: uppercase; word-break: break-all; line-height: 1.1; }
+    .preset-btn.active .preset-subtitle { color: var(--main-color); font-weight: bold; }
+    
+    /* Accordions */
+    .accordion { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; flex-shrink: 0; }
+    .acc-header { padding: 12px 15px; font-weight: bold; color: var(--main-color); cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: var(--bg-panel); }
+    .acc-header::after { content: '▼'; font-size: 12px; transition: 0.3s; }
+    .accordion.open .acc-header::after { transform: rotate(180deg); }
+    .acc-body { display: none; padding: 15px; border-top: 1px solid var(--border-color); }
+    .accordion.open .acc-body { display: block; }
+    
+    .btn-util { background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 10px; transition: 0.2s;}
+    .btn-danger { background: rgba(255,0,0,0.1); border-color: var(--danger); color: var(--danger); width: 100%; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+    .form-row-global { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: bold;}
+    .num-input { background: var(--bg-input); border: 1px solid var(--border-color); color: var(--main-color); padding: 5px; width: 60px; text-align: center; border-radius: 4px; font-weight: bold; font-family: monospace; cursor: pointer; }
 
-            .nav-area { grid-column: 1; grid-row: 1; margin-bottom: 0 !important; flex-shrink: 0; }
-            .accordion-area { 
-                grid-column: 1; grid-row: 2; 
-                overflow-y: auto; /* 左下アコーディオン内だけスクロール */
-                padding-right: 5px; 
-                padding-bottom: 0;
-                min-height: 0;
-            }
-            
-            .edit-area-wrapper { 
-                grid-column: 2; grid-row: 1 / 3; 
-                display: flex; 
-                flex-direction: column; 
-                min-height: 0; /* 高さが溢れたら内部をスクロールさせる */
-            }
-            .edit-area {
-                flex-grow: 1;
-                display: flex;
-                flex-direction: column;
-                overflow: hidden;
-                margin-bottom: 0;
-                min-height: 0;
-            }
-            #editorContent { 
-                overflow-y: auto; /* CCリスト部分だけスクロール */
-                flex-grow: 1; 
-                padding-right: 10px; 
-            }
-            .btn-save { flex-shrink: 0; /* Saveボタンは絶対に潰さない */ }
-        }
-        
-        /* スクロールバー装飾 */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
+    /* Editor UI */
+    .sheet-header-mobile { display: none; }
+    .common-row { background: var(--bg-card); border-left: 4px solid var(--main-color); margin-bottom: 10px; }
+    .tabs { display: flex; border-bottom: 2px solid var(--border-color); margin-bottom: 15px; flex-shrink: 0; }
+    .tab { flex: 1; text-align: center; padding: 12px; font-weight: bold; cursor: pointer; color: var(--text-muted); background: var(--bg-card); border: 1px solid var(--border-color); border-bottom: none; border-radius: 6px 6px 0 0; }
+    .tab.active { background: var(--main-color); color: #000; border-color: var(--main-color); }
+    .editor-content { flex-grow: 1; overflow-y: auto; padding-right: 10px; margin-bottom: 15px; }
+    .rack-row { display: flex; gap: 10px; align-items: center; background: var(--bg-card); padding: 10px 15px; border: 1px solid var(--border-color); border-radius: 4px; margin-bottom: 10px; }
+    .rack-label { width: 50px; font-weight: bold; color: var(--main-color); font-size: 14px; flex-shrink: 0; }
+    .rack-toggle { -webkit-appearance: none; appearance: none; width: 40px; height: 20px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 10px; position: relative; cursor: pointer; outline: none; }
+    .rack-toggle::after { content: ''; position: absolute; top: 1px; left: 1px; width: 16px; height: 16px; background: #888; border-radius: 50%; transition: 0.2s; }
+    .rack-toggle:checked { background: var(--active-bg); border-color: var(--main-color); }
+    .rack-toggle:checked::after { background: var(--main-color); transform: translateX(20px); }
+    .segmented { display: flex; background: var(--bg-input); border-radius: 4px; overflow: hidden; border: 1px solid var(--border-color); flex: 1;}
+    .seg-btn { flex: 1; padding: 8px; text-align: center; font-size: 12px; font-weight: bold; cursor: pointer; color: var(--text-muted); }
+    .seg-btn.active { background: var(--main-color-dim); color: #fff; }
+    .btn-save-main { background: var(--main-color-dim); color: #fff; border: 1px solid var(--main-color); width: 100%; padding: 15px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; flex-shrink: 0; }
 
-        /* === アプリ内UI要素 === */
-        .section { background-color: var(--surface); border-radius: 10px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); border-top: 3px solid #2a2a2a; }
+    /* CC Grid */
+    .cc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .cc-tile { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; aspect-ratio: 1/1; position: relative; transition: 0.3s; }
+    .cc-tile.active { border-color: var(--main-color); background: var(--active-bg); }
+    .cc-tile-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: var(--main-color); font-size: 14px; margin-bottom: 8px; }
+    .cc-tile-body { flex-grow: 1; display: flex; flex-direction: column; gap: 6px; }
+    .cc-half-btn { flex: 1; background: rgba(0,0,0,0.3); border: 1px solid transparent; border-radius: 6px; display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 8px; cursor: pointer; transition: 0.2s; user-select: none; overflow: hidden;}
+    .cc-tile-label { font-size: 11px; color: var(--text-muted); font-weight: bold; }
+    .cc-tile-val { font-size: 18px; font-family: monospace; color: var(--text-main); font-weight: bold; }
+    .cc-tile:not(.active) .cc-half-btn { cursor: not-allowed; opacity: 0.4; }
 
-        /* 折りたたみ（アコーディオン）ヘッダー */
-        .accordion-header { background: #000; padding: 12px 15px; border-radius: 8px; font-weight: bold; color: var(--primary); display: flex; justify-content: space-between; align-items: center; cursor: pointer; border: 1px solid var(--border); transition: 0.2s; margin-bottom: 10px;}
-        .accordion-header:hover { background: #111; border-color: var(--primary-dim); }
-        .accordion-content { display: none; padding: 5px; }
-        .accordion-content.open { display: block; animation: fadeIn 0.2s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+    /* Smartphone View */
+    .mobile-current-preset { display: none; }
+    body.mobile-view header { padding: 15px 10px; flex-direction: column; justify-content: center; gap: 12px; height: 100px; }
+    body.mobile-view .app-container { flex-direction: column; padding: 0; gap: 0; max-width: 500px; margin: 0 auto; height: calc(100vh - 100px); overflow: hidden; }
+    body.mobile-view .left-panel { flex: 1; width: 100%; padding: 0; gap: 0; display: flex; flex-direction: column; overflow: hidden; }
+    body.mobile-view .mobile-current-preset { display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg-panel); padding: 15px 15px 5px 15px; flex-shrink: 0; }
+    body.mobile-view .mcp-label { font-size: 11px; color: var(--main-color-dim); font-weight: bold; margin-bottom: 4px; }
+    body.mobile-view .mcp-name { font-size: 32px; font-family: monospace; color: var(--main-color); font-weight: bold; line-height: 1; text-transform: uppercase; width: 100%; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    body.mobile-view .bank-ctrl { flex-shrink: 0; border: none; border-bottom: 1px solid var(--border-color); padding: 10px 15px 15px 15px; border-radius: 0; }
+    body.mobile-view .card { flex-shrink: 0; border: none; border-radius: 0; padding: 15px 10px; background: transparent; }
+    body.mobile-view .preset-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    body.mobile-view .preset-btn { border-radius: 8px; padding: 12px 2px; }
+    body.mobile-view .preset-subtitle { font-size: 9px; letter-spacing: -0.5px; }
+    body.mobile-view .left-scroll-area { flex-grow: 1; overflow-y: auto; padding-right: 0; }
+    body.mobile-view .cc-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    body.mobile-view .cc-tile { padding: 4px; }
+    body.mobile-view .cc-tile-header { font-size: 10px; }
+    body.mobile-view .cc-tile-val { font-size: 12px; }
 
-        /* Nav Area */
-        .bank-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: #000; padding: 10px; border-radius: 8px;}
-        .title-edit { display: flex; gap: 10px; margin-top: 15px;}
-        .title-edit input { flex-grow: 1; background: #000; border: 1px dashed var(--primary-dim); color: var(--primary); padding: 12px; border-radius: 5px; font-size: 1.1rem; text-align: center; letter-spacing: 2px; font-weight: bold; width: 100%;}
-        
-        .btn-small { background: #333; color: #fff; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .nav-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px; }
-        .btn-preset { background: #2a2a2a; border: 2px solid #444; color: #fff; padding: 15px 0; border-radius: 8px; font-size: 1.4rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-preset.active { border-color: var(--primary); background: rgba(255, 204, 0, 0.15); color: var(--primary); }
+    /* Modal Overlay & Numpad */
+    .modal-overlay { display: block; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(3px); opacity: 0; pointer-events: none; visibility: hidden; transition: 0.3s; z-index: 99; }
+    .modal-overlay.open { opacity: 1; pointer-events: auto; visibility: visible; }
+    body.mobile-view .right-panel { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -45%) scale(0.95); width: 92%; max-height: 85vh; border-radius: 12px; z-index: 100; padding: 15px; border: 1px solid var(--main-color-dim); box-shadow: 0 10px 40px rgba(0,0,0,0.8); opacity: 0; pointer-events: none; visibility: hidden; transition: 0.3s; }
+    body.mobile-view .right-panel.open { transform: translate(-50%, -50%) scale(1); opacity: 1; pointer-events: auto; visibility: visible; }
+    body.mobile-view .sheet-header-mobile { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    body.mobile-view .btn-close { background: var(--bg-panel); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
 
-        /* Edit Area */
-        .tabs { display: flex; margin-bottom: 15px; background: #000; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); flex-shrink: 0;}
-        .tab { flex: 1; text-align: center; padding: 12px; cursor: pointer; font-weight: bold; color: var(--text-sub); transition: 0.2s; }
-        .tab.active { background: var(--primary); color: #000; }
-
-        #rearControls { background: #222; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px dashed var(--primary-dim); flex-shrink: 0;}
-        .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .type-btn { background: #000; color: var(--text-sub); border: 1px solid var(--border); padding: 8px; border-radius: 5px; cursor: pointer; font-weight: bold; flex: 1; text-align: center; margin-left: 5px; transition: 0.2s;}
-        .type-btn.active { background: var(--primary-dim); color: var(--text-main); border-color: var(--primary); }
-
-        .param-row { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
-        .param-label { width: 65px; font-size: 0.95rem; font-weight: bold; color: var(--text-sub); }
-        .param-slider { flex-grow: 1; }
-        input[type=range] { width: 100%; accent-color: var(--primary); cursor: pointer; }
-        .param-val { width: 65px; background: #000; border: 1px solid var(--border); color: #fff; padding: 8px 5px; text-align: center; border-radius: 4px; font-weight: bold; font-size: 1.1rem;}
-        
-        .cc-block { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #222; }
-        
-        .btn-save { width: 100%; background: var(--primary-dim); border: 1px solid var(--primary); color: #fff; padding: 18px; font-size: 1.2rem; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 -4px 10px rgba(0,0,0,0.5);}
-        .btn-save:active { background: var(--primary); color: #000; transform: scale(0.98); }
-
-        .util-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .btn-util { background: #000; border: 1px solid var(--border); color: var(--text-main); padding: 12px; border-radius: 5px; font-size: 0.9rem; cursor: pointer; font-weight: bold; transition: 0.2s;}
-        .btn-util:active { background: #333; border-color: var(--primary); }
-        .btn-danger { border-color: var(--danger); color: var(--danger); }
-
-        .hidden { display: none !important; }
-        .use-checkbox { width: 22px; height: 22px; accent-color: var(--primary); cursor: pointer; }
-        
-        #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); color: var(--primary); display: flex; justify-content: center; align-items: center; font-size: 1.5rem; font-weight: bold; z-index: 9999; }
-    </style>
+    .numpad-overlay { display: block; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); opacity: 0; pointer-events: none; visibility: hidden; transition: 0.2s; z-index: 200; }
+    .numpad-overlay.open { opacity: 1; pointer-events: auto; visibility: visible; }
+    .numpad-container { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -45%) scale(0.9); width: 320px; max-width: 90vw; background: var(--bg-panel); border: 2px solid var(--main-color); border-radius: 12px; padding: 20px; z-index: 201; opacity: 0; pointer-events: none; visibility: hidden; transition: 0.2s; box-shadow: 0 10px 40px rgba(0,0,0,0.9); }
+    .numpad-container.open { transform: translate(-50%, -50%) scale(1); opacity: 1; pointer-events: auto; visibility: visible; }
+    .numpad-title { color: var(--main-color); font-weight: bold; font-size: 16px; text-align: center; margin-bottom: 10px; text-transform: uppercase; white-space: pre-wrap; line-height: 1.3;}
+    .numpad-disp { background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 32px; font-family: monospace; font-weight: bold; text-align: right; padding: 10px 15px; border-radius: 6px; margin-bottom: 15px; min-height: 58px; letter-spacing: 2px;}
+    .numpad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .numpad-btn { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px 0; font-size: 24px; font-weight: bold; cursor: pointer; text-align: center; transition: 0.1s; user-select: none;}
+    .numpad-btn:active { background: var(--active-bg); border-color: var(--main-color); transform: scale(0.95); }
+    .numpad-btn.btn-clr { color: var(--danger); font-size: 18px; }
+    .numpad-btn.btn-bs { color: var(--main-yellow); font-size: 18px; }
+    
+    .hidden { display: none !important; }
+  </style>
 </head>
 <body>
 
-<div id="loadingOverlay" class="hidden">Loading Device Data...</div>
+<script>if (isSmartphone) document.body.classList.add('mobile-view');</script>
 
-<div class="header" style="max-width: 1600px; margin: 0 auto 15px auto; width: 100%;">
-    <h1>MIDI Switcher UI</h1>
-    <button class="btn-connect" id="btnConnect" onclick="toggleConnect()">Connect BLE</button>
+<div id="loader" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:9999;display:none;flex-direction:column;justify-content:center;align-items:center;color:var(--main-color);font-weight:bold;">
+  <div id="loader-msg">LOADING...</div>
 </div>
 
-<div class="main-grid">
+<div id="numpad-bg" class="numpad-overlay" onclick="closeNumpad()"></div>
+<div id="numpad-modal" class="numpad-container">
+  <div id="numpad-title" class="numpad-title">TITLE</div>
+  <div id="numpad-disp" class="numpad-disp">0</div>
+  <div class="numpad-grid">
+    <div class="numpad-btn" onclick="numpadPress(7)">7</div>
+    <div class="numpad-btn" onclick="numpadPress(8)">8</div>
+    <div class="numpad-btn" onclick="numpadPress(9)">9</div>
+    <div class="numpad-btn" onclick="numpadPress(4)">4</div>
+    <div class="numpad-btn" onclick="numpadPress(5)">5</div>
+    <div class="numpad-btn" onclick="numpadPress(6)">6</div>
+    <div class="numpad-btn" onclick="numpadPress(1)">1</div>
+    <div class="numpad-btn" onclick="numpadPress(2)">2</div>
+    <div class="numpad-btn" onclick="numpadPress(3)">3</div>
+    <div class="numpad-btn btn-clr" onclick="numpadClear()">CLR</div>
+    <div class="numpad-btn" onclick="numpadPress(0)">0</div>
+    <div class="numpad-btn btn-bs" onclick="numpadBS()">BS</div>
+  </div>
+  <div style="display:flex; gap:10px; margin-top:15px;">
+    <button class="btn-util" style="margin:0; flex:1; padding:12px;" onclick="closeNumpad()">CANCEL</button>
+    <button class="btn-save-main" style="margin:0; flex:1; padding:12px;" onclick="numpadOK()">OK</button>
+  </div>
+</div>
+
+<header>
+  <h1 onclick="cycleTheme()" title="Theme Change">MIDI Switcher</h1>
+  <div style="display:flex; gap:15px; align-items:center;">
+    <button id="btnConnect" class="btn-connect" onclick="connectBLE()">📡 CONNECT BLE</button>
+    <div class="status-badge" id="status-badge"><div class="status-dot"></div> Disconnected</div>
+  </div>
+</header>
+
+<div class="app-container" id="main-ui">
+  <div class="left-panel">
+    <div id="mobileCurrentPreset" class="mobile-current-preset">
+      <div class="mcp-label">CURRENT PRESET <span id="mcpNum" style="color:var(--text-muted); margin-left:5px;">1-1</span></div>
+      <div class="mcp-name" id="mcpName">PRESET NAME</div>
+    </div>
+
+    <div class="bank-ctrl">
+      <button class="btn-bank" onclick="changeBank(-1)">◀ BANK</button>
+      <div class="bank-disp" id="disp-bank">Bank 1</div>
+      <button class="btn-bank" onclick="changeBank(1)">BANK ▶</button>
+    </div>
     
-    <div class="nav-area section">
-        <div class="bank-controls">
-            <button class="btn-small" onclick="changeBank(-1)">◀ Bank</button>
-            <span id="displayBank" style="font-size: 1.4rem; font-weight: bold; color: var(--primary);">Bank 1</span>
-            <button class="btn-small" onclick="changeBank(1)">Bank ▶</button>
+    <div class="card"><div class="preset-grid" id="presetGrid"></div></div>
+
+    <div class="left-scroll-area">
+      <div class="accordion" id="acc-utils">
+        <div class="acc-header" onclick="toggleAccordion('acc-utils')">Preset & Bank Utilities</div>
+        <div class="acc-body">
+          <h4 style="margin:0 0 10px 0; color:var(--main-color-dim); font-size:12px;">Preset (Current Bank)</h4>
+          <div style="display:flex; gap:10px;">
+            <button class="btn-util" onclick="swapPreset()">🔄 Preset Swap</button>
+            <button class="btn-util" onclick="copyPreset()">📄 Preset Copy</button>
+          </div>
+          <button class="btn-danger" style="margin-bottom:15px;" onclick="clearCurrentPreset()">🗑️ Clear Preset</button>
+          <h4 style="margin:0 0 10px 0; color:var(--main-color-dim); font-size:12px;">Bank (Entire 8 Presets)</h4>
+          <div style="display:flex; gap:10px;">
+            <button class="btn-util" onclick="swapBank()">🔄 Bank Swap</button>
+            <button class="btn-util" onclick="copyBank()">📄 Bank Copy</button>
+          </div>
         </div>
-        <div class="nav-grid" id="presetGrid"></div>
-        <div class="title-edit">
-            <input type="text" id="presetTitle" maxlength="16" placeholder="FRONT TITLE (16 CHARS)" onchange="updateTitle()">
+      </div>
+
+      <div class="accordion" id="acc-global">
+        <div class="acc-header" onclick="toggleAccordion('acc-global')">Global Settings</div>
+        <div class="acc-body">
+          <div class="form-row-global"><label>MIDI CH</label><input type="text" readonly id="gs-mc" class="num-input" value="1" onclick="editWithNumpad('MIDI CH (1-16)', {type:'number', max:16}, 'gs-mc', (v)=>{ if(v<1)v=1; document.getElementById('gs-mc').value=v; saveGlobalSettings(); })"></div>
+          <div class="form-row-global"><label>Max Bank</label><input type="text" readonly id="gs-mb" class="num-input" value="9" onclick="editWithNumpad('Max Bank (1-9)', {type:'number', max:9}, 'gs-mb', (v)=>{ if(v<1)v=1; document.getElementById('gs-mb').value=v; saveGlobalSettings(); })"></div>
+          <div class="form-row-global"><label>USB MIDI</label><input type="checkbox" class="rack-toggle" id="usbMidiToggle" onchange="toggleUsbMidi(); saveGlobalSettings();" checked></div>
         </div>
-        <div style="font-size: 0.8rem; color: var(--text-sub); text-align: center; margin-top: 5px;">※Max 16 Characters</div>
+      </div>
+
+      <div class="accordion" id="acc-sync">
+        <div class="acc-header" onclick="toggleAccordion('acc-sync')">Data Sync</div>
+        <div class="acc-body">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <button class="btn-util" onclick="saveToPC()">💾 PCへ保存</button>
+            <button class="btn-util" onclick="document.getElementById('fileInput').click()">📂 PCから読込</button>
+            <button class="btn-util" style="background:var(--active-bg); color:var(--main-color); border-color:var(--main-color);" onclick="sendAllToDevice()">📤 本体へ全送信</button>
+            <button class="btn-util" style="background:rgba(0,255,136,0.1); color:#00ff88; border-color:#00ff88;" onclick="loadFromDevice()">📥 本体から全同期</button>
+            <button class="btn-util" style="grid-column: span 2; background:rgba(255,68,68,0.1); color:var(--danger); border-color:var(--danger);" onclick="factoryResetUI()">♻️ ファクトリーリセット</button>
+          </div>
+          <input type="file" id="fileInput" style="display:none" accept=".json" onchange="loadFromPC(event)">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="overlay" onclick="closeSheet()"></div>
+  <div class="right-panel" id="editor-sheet">
+    <div class="sheet-header-mobile">
+      <h2 id="sheet-title" style="color:var(--main-color); margin:0;">PRESET</h2>
+      <button class="btn-close" onclick="closeSheet()">✕</button>
     </div>
 
-    <div class="accordion-area">
-        <div class="section" style="padding: 10px;">
-            <div class="accordion-header" onclick="toggleAccordion('accPresetUtil')">
-                Preset Utilities <span id="accPresetUtil-arrow">▼</span>
-            </div>
-            <div class="accordion-content" id="accPresetUtil">
-                <div class="util-grid">
-                    <button class="btn-util" onclick="alert('Preset Swap')">🔄 Swap</button>
-                    <button class="btn-util" onclick="alert('Preset Copy')">📄 Copy</button>
-                    <button class="btn-util btn-danger" style="grid-column: span 2;" onclick="alert('Clear Preset')">🗑️ Clear Preset</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="section" style="padding: 10px;">
-            <div class="accordion-header" onclick="toggleAccordion('accGlobal')">
-                Global Settings <span id="accGlobal-arrow">▼</span>
-            </div>
-            <div class="accordion-content" id="accGlobal">
-                <div class="param-row">
-                    <span class="param-label" style="width: 80px;">MIDI CH</span>
-                    <input type="number" class="param-val" min="1" max="16" value="1" style="width: 100%;">
-                </div>
-                <div class="param-row">
-                    <span class="param-label" style="width: 80px;">Max Bank</span>
-                    <input type="number" class="param-val" min="1" max="9" value="9" style="width: 100%;">
-                </div>
-                <div class="toggle-row" style="margin-top: 15px;">
-                    <span style="font-weight: bold; color: var(--text-sub);">USB MIDI</span>
-                    <div style="display: flex; flex: 1; margin-left: 15px;">
-                        <button class="type-btn active">ON</button>
-                        <button class="type-btn">OFF</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="section" style="padding: 10px;">
-            <div class="accordion-header" onclick="toggleAccordion('accBrowser')">
-                Browser Utilities <span id="accBrowser-arrow">▼</span>
-            </div>
-            <div class="accordion-content" id="accBrowser">
-                <div class="util-grid">
-                    <button class="btn-util">📂 Backup All</button>
-                    <button class="btn-util">📥 Restore All</button>
-                    <button class="btn-util btn-danger" style="grid-column: span 2;">⚠️ Factory Reset</button>
-                </div>
-            </div>
-        </div>
+    <div class="rack-row" style="background:var(--bg-input); border-color:var(--main-color); margin-bottom: 15px;">
+      <div class="rack-label" style="width:100px;">Name</div>
+      <input type="text" id="presetTitle" maxlength="11" onchange="updateTitle()" style="flex:1; background:transparent; border:none; border-bottom:2px solid var(--main-color-dim); color:var(--main-color); font-weight:bold; outline:none; text-transform:uppercase; font-size:28px; font-family:monospace; padding:0 5px;">
     </div>
 
-    <div class="edit-area-wrapper">
-        <div class="edit-area section">
-            <div class="tabs">
-                <div class="tab active" id="tabFront" onclick="switchTab('front')">Front</div>
-                <div class="tab" id="tabRear" onclick="switchTab('rear')">Rear</div>
-            </div>
-
-            <div id="rearControls" class="hidden">
-                <div class="toggle-row">
-                    <span style="font-weight: bold; color: #fff;">Use Rear Setting</span>
-                    <input type="checkbox" class="use-checkbox" id="useRearToggle" onchange="toggleUseRear()">
-                </div>
-                <div class="toggle-row" style="margin-bottom: 0;">
-                    <span style="font-weight: bold; color: var(--text-sub); font-size: 0.95rem;">Switch Type</span>
-                    <div style="display: flex; flex: 1; margin-left: 15px;">
-                        <button class="type-btn" id="btnTog" onclick="setRearType('Tog')">Toggle</button>
-                        <button class="type-btn" id="btnMom" onclick="setRearType('Mom')">Momentary</button>
-                    </div>
-                </div>
-                <div class="toggle-row" style="margin-top: 15px; border-top: 1px dashed #444; padding-top: 15px;">
-                    <span style="font-weight: bold; color: var(--primary);">Custom Rear Title</span>
-                    <input type="checkbox" class="use-checkbox" id="useRearTitleToggle" onchange="toggleRearTitle()">
-                </div>
-                <div class="title-edit" id="rearTitleContainer" style="display:none; margin-top: 5px;">
-                    <input type="text" id="rearTitleInput" maxlength="16" placeholder="REAR TITLE (16 CHARS)" onchange="updateRearTitle()">
-                </div>
-            </div>
-
-            <div id="editorContent">
-                <div class="param-row">
-                    <span class="param-label">PC Num</span>
-                    <input type="range" class="param-slider" id="pcSlider" min="0" max="127" oninput="updateActionParam('pc', this.value, true)">
-                    <input type="number" class="param-val" id="pcVal" min="0" max="127" oninput="updateActionParam('pc', this.value, false)">
-                </div>
-                <div class="param-row">
-                    <span class="param-label">U-PC</span>
-                    <input type="range" class="param-slider" id="upcSlider" min="0" max="127" oninput="updateActionParam('upc', this.value, true)">
-                    <input type="number" class="param-val" id="upcVal" min="0" max="127" oninput="updateActionParam('upc', this.value, false)">
-                </div>
-                
-                <hr style="border-color: var(--border); margin: 20px 0;">
-                <div style="font-size: 1.1rem; font-weight: bold; color: var(--primary); margin-bottom: 10px;">CC Config (1-8)</div>
-
-                <div id="ccContainer"></div>
-            </div>
-        </div>
-        <button class="btn-save" onclick="alert('デバイスのEEPROMに保存しました！\n（現在選択中のBank '+currentBank+'-'+currentPreset+'）')">💾 Save Preset to Device</button>
+    <div class="rack-row common-row" style="margin-bottom:15px; display:flex; gap:15px;">
+      <div style="flex:1; display:flex; align-items:center; justify-content:space-between;">
+        <div class="rack-label" style="width:auto;">PC</div>
+        <input type="text" readonly class="num-input" id="pcVal" onclick="editWithNumpad('PC Value (0-127)', {type:'number', max:127}, 'pcVal', (v)=>updateActionParam('pc', v))">
+      </div>
+      <div id="upcCol" style="flex:1; display:flex; align-items:center; justify-content:space-between; border-left:1px solid #444; padding-left:15px;">
+        <div class="rack-label" style="width:auto;">U-PC</div>
+        <input type="text" readonly class="num-input" id="upcVal" onclick="editWithNumpad('U-PC Value (0-127)', {type:'number', max:127}, 'upcVal', (v)=>updateActionParam('upc', v))">
+      </div>
     </div>
 
+    <div class="tabs"><div class="tab active" id="tabFront" onclick="switchTab('front')">Front</div><div class="tab" id="tabRear" onclick="switchTab('rear')">Rear</div></div>
+
+    <div class="editor-content" id="editorContent">
+      <div id="rearControls" class="hidden">
+        <div class="rack-row" style="background:var(--active-bg); border-color:var(--main-color);"><div class="rack-label" style="width:120px;">Use Rear</div><input type="checkbox" class="rack-toggle" id="useRearToggle" onchange="toggleUseRear()"></div>
+        <div id="rearSettingsArea" style="transition:0.3s;">
+          <div class="rack-row"><div class="rack-label" style="width:120px;">Type</div><div class="segmented"><div class="seg-btn" id="btnTog" onclick="setRearType('Tog')">Toggle</div><div class="seg-btn" id="btnMom" onclick="setRearType('Mom')">Momentary</div></div></div>
+          <div class="rack-row"><div class="rack-label" style="width:120px;">Custom Title</div><input type="checkbox" class="rack-toggle" id="useRearTitleToggle" onchange="toggleRearTitle()"><input type="text" id="rearTitleInput" maxlength="11" onchange="updateRearTitle()" style="flex:1; background:var(--bg-input); border:1px solid var(--border-color); color:var(--main-color); display:none; text-transform:uppercase; padding:5px; transition:0.3s;"></div>
+        </div>
+      </div>
+      <h4 id="ccHeader" style="color:var(--text-muted); margin: 0 0 10px 0; border-bottom:1px solid var(--border-color); padding-bottom:5px;">CC Config (1-8)</h4>
+      <div id="ccContainer" class="cc-grid"></div>
+    </div>
+    <button class="btn-save-main" onclick="sendToDevice()">💾 Save Preset to Device</button>
+  </div>
 </div>
 
 <script>
-    function toggleAccordion(id) {
-        const content = document.getElementById(id);
-        const arrow = document.getElementById(id + '-arrow');
-        if (content.classList.contains('open')) {
-            content.classList.remove('open');
-            arrow.innerText = '▼';
-        } else {
-            content.classList.add('open');
-            arrow.innerText = '▲';
+  const DEBUG_MODE = true; // 開発中はtrueでロック無効
+  let appData = {}, currentBank = 1, currentPreset = 1, maxBank = 9, currentTab = 'front', isUsbMidiEnabled = true;
+  let bleDevice, bleServer, rxChar, txChar, receiveBuffer = "", resolveInfoLoad, resolveBankLoad, timerInfo, timerBank;
+
+  // テーマ適用
+  function applyThemeByIdx() {
+    const t = themes[currentThemeIdx];
+    const root = document.documentElement;
+    root.style.setProperty('--main-color', t.main);
+    root.style.setProperty('--main-color-dim', t.dim);
+    root.style.setProperty('--active-bg', t.bg);
+  }
+  function cycleTheme() {
+    currentThemeIdx = (currentThemeIdx + 1) % themes.length;
+    localStorage.setItem('savedThemeIdx', currentThemeIdx);
+    applyThemeByIdx();
+  }
+
+  // テンキーロジック
+  let numpadConfig = {}, numpadCallback = null, numpadCurVal = "";
+  function openNumpad(title, config, cb) {
+    document.getElementById('numpad-title').innerText = title;
+    numpadConfig = config; numpadCallback = cb; numpadCurVal = "";
+    updateNumpadDisp();
+    document.getElementById('numpad-bg').classList.add('open');
+    document.getElementById('numpad-modal').classList.add('open');
+    document.addEventListener('keydown', handleNumpadKey);
+  }
+  function closeNumpad() {
+    document.getElementById('numpad-bg').classList.remove('open');
+    document.getElementById('numpad-modal').classList.remove('open');
+    document.removeEventListener('keydown', handleNumpadKey);
+  }
+  function numpadPress(n) {
+    if (numpadConfig.type === 'preset') {
+      if (numpadCurVal.length === 0) { if (n >= 1 && n <= maxBank) numpadCurVal += n.toString(); }
+      else if (numpadCurVal.length === 1) { if (n >= 1 && n <= 8) numpadCurVal += n.toString(); }
+    } else {
+      let nextVal = numpadCurVal + n.toString();
+      if (parseInt(nextVal) > numpadConfig.max) nextVal = numpadConfig.max.toString();
+      if (nextVal.length > 1 && nextVal.startsWith("0")) nextVal = parseInt(nextVal).toString();
+      numpadCurVal = nextVal;
+    }
+    updateNumpadDisp();
+  }
+  function numpadBS() { numpadCurVal = numpadCurVal.slice(0, -1); updateNumpadDisp(); }
+  function numpadClear() { numpadCurVal = ""; updateNumpadDisp(); }
+  function numpadOK() {
+    if (numpadConfig.type === 'preset' && numpadCurVal.length !== 2) return;
+    let val = numpadConfig.type === 'preset' ? {b:parseInt(numpadCurVal[0]), p:parseInt(numpadCurVal[1])} : (parseInt(numpadCurVal) || 0);
+    closeNumpad(); if (numpadCallback) numpadCallback(val);
+  }
+  function updateNumpadDisp() {
+    if (numpadConfig.type === 'preset') {
+      let b = numpadCurVal[0] || '○', p = numpadCurVal[1] || '○';
+      document.getElementById('numpad-disp').innerText = `${b} - ${p}`;
+    } else { document.getElementById('numpad-disp').innerText = numpadCurVal === "" ? "0" : numpadCurVal; }
+  }
+  function handleNumpadKey(e) {
+    if (e.key >= '0' && e.key <= '9') { e.preventDefault(); numpadPress(parseInt(e.key)); }
+    else if (e.key === 'Backspace') { e.preventDefault(); numpadBS(); }
+    else if (e.key === 'Enter') { e.preventDefault(); numpadOK(); }
+    else if (e.key === 'Escape') { e.preventDefault(); closeNumpad(); }
+  }
+  function editWithNumpad(title, config, elId, cb) {
+    let el = document.getElementById(elId); if (el && el.disabled) return;
+    openNumpad(title, config, (v) => { if(el && typeof v !== 'object') el.value = v; cb(v); });
+  }
+
+  // CCタイル編集
+  function editCCNum(i) { if (!appData[currentBank][currentPreset][currentTab].cc[i].use) return; openNumpad(`CC${i+1} NUM (0-127)`, {type:'number', max:127}, (v) => { updateCCParam(i, 'num', v); }); }
+  function editCCVal(i) { if (!appData[currentBank][currentPreset][currentTab].cc[i].use) return; openNumpad(`CC${i+1} VAL (0-127)`, {type:'number', max:127}, (v) => { updateCCParam(i, 'val', v); }); }
+
+  // BLE Core
+  const SERVICE_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e", RX_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e", TX_UUID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
+  function setUILock(isLocked) {
+    const ui = document.getElementById('main-ui');
+    if(isLocked) { ui.style.pointerEvents='none'; ui.style.opacity='0.3'; ui.style.filter='blur(2px)'; }
+    else { ui.style.pointerEvents='auto'; ui.style.opacity='1'; ui.style.filter='none'; }
+  }
+  async function connectBLE() {
+    try {
+      showLoader("CONNECTING...");
+      bleDevice = await navigator.bluetooth.requestDevice({ filters: [{ name: 'MIDI Switcher BLE' }], optionalServices: [SERVICE_UUID] });
+      bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
+      bleServer = await bleDevice.gatt.connect();
+      const service = await bleServer.getPrimaryService(SERVICE_UUID);
+      rxChar = await service.getCharacteristic(RX_UUID);
+      txChar = await service.getCharacteristic(TX_UUID);
+      txChar.addEventListener('characteristicvaluechanged', (e) => {
+        receiveBuffer += new TextDecoder().decode(e.target.value);
+        if (receiveBuffer.includes('\n')) {
+          let parts = receiveBuffer.split('\n'); receiveBuffer = parts.pop();
+          for (let s of parts) if(s.trim()) try { processBleResponse(JSON.parse(s.trim())); } catch(err) {}
         }
+      });
+      await txChar.startNotifications();
+      document.getElementById('btnConnect').style.display = 'none';
+      await fetchInfoBLE(); await fetchBankDataBLE(currentBank);
+      buildUI(); refreshEditorUI(); setStatus('ok', 'Connected'); setUILock(false); hideLoader();
+    } catch (e) { hideLoader(); setStatus('err', 'BLE Error'); }
+  }
+  function onDisconnected() { setStatus('err', 'Disconnected'); document.getElementById('btnConnect').style.display = 'block'; if (!DEBUG_MODE) setUILock(true); }
+  async function sendBleCommand(obj) { if (!rxChar) return; const data = new TextEncoder().encode(JSON.stringify(obj) + "\n"); for (let i = 0; i < data.length; i += 256) { await rxChar.writeValue(data.slice(i, i + 256)); await new Promise(r => setTimeout(r, 20)); } }
+
+  function processBleResponse(data) {
+    if (data.cmd === "info_res") {
+      currentBank = data.cB || 1; maxBank = data.gs.mB || 9;
+      document.getElementById('gs-mc').value = data.gs.mC; document.getElementById('gs-mb').value = data.gs.mB; document.getElementById('usbMidiToggle').checked = !!data.gs.uM; toggleUsbMidi();
+      if (resolveInfoLoad) { clearTimeout(timerInfo); resolveInfoLoad(); resolveInfoLoad = null; }
+    } else if (data.cmd === "bank_res") {
+      let b = data.b; let arr = data.data;
+      for(let i=0; i<8; i++) {
+        let p = i+1, d = arr[i];
+        appData[b][p] = { name: d.name, rearName: d.rName, useRear: d.uR, useRearName: d.uRn, rearType: d.isM ? 'Mom' : 'Tog', front: { pc: d.f.pc, upc: d.f.upc, cc: d.f.cU.map((u,idx)=>({use:u, num:d.f.cN[idx], val:d.f.cV[idx]})) }, rear: { pc: d.r.pc, upc: d.r.upc, cc: d.r.cU.map((u,idx)=>({use:u, num:d.r.cN[idx], val:d.r.cV[idx]})) } };
+      }
+      if (resolveBankLoad) { clearTimeout(timerBank); resolveBankLoad(); resolveBankLoad = null; }
+    } else if (data.cmd === "status") {
+      currentBank = data.cB; currentPreset = data.cP; buildUI(); refreshEditorUI();
     }
+  }
+  async function fetchInfoBLE() { return new Promise((r) => { resolveInfoLoad = r; sendBleCommand({ cmd: "info" }); timerInfo = setTimeout(() => { if(resolveInfoLoad){resolveInfoLoad=null; r();} }, 5000); }); }
+  async function fetchBankDataBLE(b) { return new Promise((r) => { resolveBankLoad = r; sendBleCommand({ cmd: "bank", b: b }); timerBank = setTimeout(() => { if(resolveBankLoad){resolveBankLoad=null; r();} }, 5000); }); }
 
-    let currentBank = 1; let currentPreset = 1; let currentTab = 'front';
-    let appData = {};
-
-    function initData() {
-        for (let b = 1; b <= 9; b++) {
-            appData[b] = {};
-            for (let p = 1; p <= 8; p++) {
-                appData[b][p] = {
-                    name: `PRESET ${b}-${p}`, useRear: false, rearType: 'Tog', useRearName: false, rearName: `REAR ${b}-${p}`,
-                    front: { pc: 0, upc: 255, cc: Array.from({length:8}, () => ({use:false, num:0, val:0})) },
-                    rear: { pc: 0, upc: 255, cc: Array.from({length:8}, () => ({use:false, num:0, val:0})) }
-                };
-            }
-        }
+  // UI Logic
+  function initData() { for (let b=1; b<=99; b++) { appData[b]={}; for (let p=1; p<=8; p++) appData[b][p] = { name:`PRESET ${b}-${p}`, rearName:`REAR ${b}-${p}`, useRear:false, useRearName:false, rearType:'Tog', front:{pc:0, upc:0, cc:Array.from({length:8},()=>({use:false,num:0,val:0}))}, rear:{pc:0, upc:0, cc:Array.from({length:8},()=>({use:false,num:0,val:0}))} }; } }
+  function buildUI() {
+    const grid = document.getElementById('presetGrid'); grid.innerHTML = '';
+    for (let i=1; i<=8; i++) {
+      const btn = document.createElement('div'); btn.className = `preset-btn ${i === currentPreset ? 'active' : ''}`;
+      btn.innerHTML = `<div class="tile-num">${i}</div><div class="preset-subtitle">${appData[currentBank][i].name}</div>`;
+      btn.onclick = () => selectPreset(i); grid.appendChild(btn);
     }
-
-    function buildUI() {
-        const presetGrid = document.getElementById('presetGrid');
-        presetGrid.innerHTML = '';
-        for (let i = 1; i <= 8; i++) {
-            const btn = document.createElement('button');
-            btn.className = `btn-preset ${i === currentPreset ? 'active' : ''}`;
-            btn.innerText = i;
-            btn.onclick = () => selectPreset(i);
-            presetGrid.appendChild(btn);
-        }
-
-        const ccContainer = document.getElementById('ccContainer');
-        ccContainer.innerHTML = '';
-        for (let i = 0; i < 8; i++) {
-            ccContainer.innerHTML += `
-                <div class="cc-block">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                        <span style="font-weight: bold; color: var(--primary); font-size: 1.1rem;">CC ${i+1}</span>
-                        <label style="display: flex; align-items: center; gap: 8px; font-weight: bold;">
-                            Use <input type="checkbox" class="use-checkbox" id="ccUse${i}" onchange="updateCCParam(${i}, 'use', this.checked)">
-                        </label>
-                    </div>
-                    <div class="param-row" style="margin-bottom: 8px;">
-                        <span class="param-label" style="width: 40px;">Num</span>
-                        <input type="range" class="param-slider" id="ccNumSlider${i}" min="0" max="127" oninput="updateCCParam(${i}, 'num', this.value, true)">
-                        <input type="number" class="param-val" id="ccNumVal${i}" min="0" max="127" oninput="updateCCParam(${i}, 'num', this.value, false)">
-                    </div>
-                    <div class="param-row" style="margin-bottom: 0;">
-                        <span class="param-label" style="width: 40px;">Val</span>
-                        <input type="range" class="param-slider" id="ccValSlider${i}" min="0" max="127" oninput="updateCCParam(${i}, 'val', this.value, true)">
-                        <input type="number" class="param-val" id="ccValVal${i}" min="0" max="127" oninput="updateCCParam(${i}, 'val', this.value, false)">
-                    </div>
-                </div>
-            `;
-        }
+    const cc = document.getElementById('ccContainer');
+    if(!cc.innerHTML) {
+      for (let i=0; i<8; i++) cc.innerHTML += `<div class="cc-tile" id="ccTile${i}"><div class="cc-tile-header"><span>CC ${i+1}</span><input type="checkbox" class="rack-toggle" id="ccUse${i}" onchange="updateCCParam(${i}, 'use', this.checked)"></div><div class="cc-tile-body"><div class="cc-half-btn" onclick="editCCNum(${i})"><div class="cc-tile-label">NUM</div><div class="cc-tile-val" id="ccNumDisp${i}">0</div></div><div class="cc-half-btn" onclick="editCCVal(${i})"><div class="cc-tile-label">VAL</div><div class="cc-tile-val" id="ccValDisp${i}">0</div></div></div></div>`;
     }
-
-    function refreshEditorUI() {
-        const pData = appData[currentBank][currentPreset];
-        const actionData = pData[currentTab];
-
-        document.getElementById('presetTitle').value = pData.name;
-        document.getElementById('useRearToggle').checked = pData.useRear;
-        document.getElementById('btnTog').className = `type-btn ${pData.rearType === 'Tog' ? 'active' : ''}`;
-        document.getElementById('btnMom').className = `type-btn ${pData.rearType === 'Mom' ? 'active' : ''}`;
-        
-        document.getElementById('useRearTitleToggle').checked = pData.useRearName;
-        document.getElementById('rearTitleInput').value = pData.rearName;
-        document.getElementById('rearTitleContainer').style.display = pData.useRearName ? 'flex' : 'none';
-
-        document.getElementById('pcSlider').value = actionData.pc === 255 ? 0 : actionData.pc;
-        document.getElementById('pcVal').value = actionData.pc === 255 ? 0 : actionData.pc;
-        document.getElementById('upcSlider').value = actionData.upc === 255 ? 0 : actionData.upc;
-        document.getElementById('upcVal').value = actionData.upc === 255 ? 0 : actionData.upc;
-
-        for (let i = 0; i < 8; i++) {
-            document.getElementById(`ccUse${i}`).checked = actionData.cc[i].use;
-            document.getElementById(`ccNumSlider${i}`).value = actionData.cc[i].num;
-            document.getElementById(`ccNumVal${i}`).value = actionData.cc[i].num;
-            document.getElementById(`ccValSlider${i}`).value = actionData.cc[i].val;
-            document.getElementById(`ccValVal${i}`).value = actionData.cc[i].val;
-        }
+    document.getElementById('disp-bank').innerText = `Bank ${currentBank}`;
+  }
+  function refreshEditorUI() {
+    const p = appData[currentBank][currentPreset], a = p[currentTab];
+    document.getElementById('presetTitle').value = p.name;
+    document.getElementById('pcVal').value = p.front.pc; document.getElementById('upcVal').value = p.front.upc;
+    document.getElementById('useRearToggle').checked = p.useRear;
+    document.getElementById('btnTog').className = `seg-btn ${p.rearType === 'Tog' ? 'active' : ''}`;
+    document.getElementById('btnMom').className = `seg-btn ${p.rearType === 'Mom' ? 'active' : ''}`;
+    document.getElementById('useRearTitleToggle').checked = p.useRearName;
+    document.getElementById('rearTitleInput').value = p.rearName;
+    document.getElementById('rearTitleInput').style.display = p.useRearName ? 'block' : 'none';
+    for (let i=0; i<8; i++) {
+      let c = a.cc[i]; document.getElementById(`ccUse${i}`).checked = c.use;
+      document.getElementById(`ccNumDisp${i}`).innerText = c.num; document.getElementById(`ccValDisp${i}`).innerText = c.val;
+      document.getElementById(`ccTile${i}`).classList.toggle('active', c.use);
     }
-
-    function updateActionParam(param, val, fromSlider) {
-        val = parseInt(val) || 0; if(val > 127) val = 127; if(val < 0) val = 0;
-        appData[currentBank][currentPreset][currentTab][param] = val;
-        if(fromSlider) document.getElementById(`${param}Val`).value = val;
-        else document.getElementById(`${param}Slider`).value = val;
+    document.getElementById('rearControls').classList.toggle('hidden', currentTab !== 'rear');
+    if (isSmartphone) {
+       document.getElementById('mcpName').innerText = p.name;
+       document.getElementById('mcpNum').innerText = `${currentBank}-${currentPreset}`;
     }
+    const area = document.getElementById('rearSettingsArea'), ccCont = document.getElementById('ccContainer'), ccHead = document.getElementById('ccHeader');
+    area.style.opacity = p.useRear ? "1" : "0.4"; area.style.pointerEvents = p.useRear ? "auto" : "none";
+    if (currentTab === 'rear' && !p.useRear) { ccCont.style.opacity="0.4"; ccCont.style.pointerEvents="none"; ccHead.style.opacity="0.4"; }
+    else { ccCont.style.opacity="1"; ccCont.style.pointerEvents="auto"; ccHead.style.opacity="1"; }
+  }
+  function updateActionParam(par, val) {
+    val = parseInt(val) || 0; if(val>127) val=127;
+    if (par === 'pc' || par === 'upc') { appData[currentBank][currentPreset].front[par] = val; appData[currentBank][currentPreset].rear[par] = val; }
+    else appData[currentBank][currentPreset][currentTab][par] = val;
+    refreshEditorUI(); markUnsaved();
+  }
+  function updateCCParam(i, par, val) {
+    if(par !== 'use') { val = parseInt(val) || 0; if(val>127) val=127; }
+    appData[currentBank][currentPreset][currentTab].cc[i][par] = val; refreshEditorUI(); markUnsaved();
+  }
+  function updateTitle() {
+    let input = document.getElementById('presetTitle');
+    if (input.value.length > 11) input.value = input.value.substring(0, 11);
+    appData[currentBank][currentPreset].name = input.value.toUpperCase(); buildUI(); refreshEditorUI(); markUnsaved();
+  }
+  function updateRearTitle() {
+    let input = document.getElementById('rearTitleInput');
+    if (input.value.length > 11) input.value = input.value.substring(0, 11);
+    appData[currentBank][currentPreset].rearName = input.value.toUpperCase(); markUnsaved();
+  }
+  function toggleRearTitle() { appData[currentBank][currentPreset].useRearName = document.getElementById('useRearTitleToggle').checked; refreshEditorUI(); markUnsaved(); }
+  function toggleUseRear() {
+    const p = appData[currentBank][currentPreset]; const chk = document.getElementById('useRearToggle').checked;
+    if (chk && !p.useRear && confirm("FrontをRearにコピーしますか？")) p.rear = JSON.parse(JSON.stringify(p.front));
+    p.useRear = chk; refreshEditorUI(); markUnsaved();
+  }
+  function setRearType(t) { appData[currentBank][currentPreset].rearType = t; refreshEditorUI(); markUnsaved(); }
+  function switchTab(t) { currentTab = t; document.getElementById('tabFront').className = `tab ${t==='front'?'active':''}`; document.getElementById('tabRear').className = `tab ${t==='rear'?'active':''}`; refreshEditorUI(); }
+  function selectPreset(n) {
+    if (currentPreset !== n) { if (isUnsaved() && !confirm("変更を破棄しますか？")) return; clearUnsaved(); currentPreset = n; buildUI(); refreshEditorUI(); if (rxChar) sendBleCommand({ cmd: "change_preset", b: currentBank, p: currentPreset }); }
+    else if (isSmartphone || window.innerWidth <= 768) { document.getElementById('overlay').classList.add('open'); document.getElementById('editor-sheet').classList.add('open'); }
+  }
+  async function changeBank(dir) {
+    if (isUnsaved() && !confirm("変更を破棄しますか？")) return;
+    clearUnsaved(); currentBank += dir; if(currentBank>maxBank) currentBank=1; if(currentBank<1) currentBank=maxBank;
+    if (rxChar) { showLoader(`LOADING...`); await fetchBankDataBLE(currentBank); sendBleCommand({ cmd: "change_preset", b: currentBank, p: currentPreset }); hideLoader(); }
+    buildUI(); refreshEditorUI();
+  }
+  function toggleAccordion(id) { document.getElementById(id).classList.toggle('open'); }
+  function closeSheet() { document.getElementById('overlay').classList.remove('open'); document.getElementById('editor-sheet').classList.remove('open'); }
+  function toggleUsbMidi() { isUsbMidiEnabled = document.getElementById('usbMidiToggle').checked; document.getElementById('upcCol').style.display = isUsbMidiEnabled ? 'flex' : 'none'; }
+  function markUnsaved() { document.querySelector('.btn-save-main').classList.add('unsaved'); }
+  function clearUnsaved() { document.querySelector('.btn-save-main').classList.remove('unsaved'); }
+  function isUnsaved() { return document.querySelector('.btn-save-main').classList.contains('unsaved'); }
 
-    function updateCCParam(index, param, val, fromSlider) {
-        if(param !== 'use') { val = parseInt(val) || 0; if(val > 127) val = 127; if(val < 0) val = 0; }
-        appData[currentBank][currentPreset][currentTab].cc[index][param] = val;
-        if (param !== 'use') {
-            let capParam = param.charAt(0).toUpperCase() + param.slice(1);
-            if(fromSlider) document.getElementById(`cc${capParam}Val${index}`).value = val;
-            else document.getElementById(`cc${capParam}Slider${index}`).value = val;
-        }
-    }
+  // Utils
+  function swapPreset() { openNumpad("Swap Preset\n(Target Bank - Preset)", {type: 'preset'}, (res) => { let tb=res.b, tp=res.p; if(appData[tb]){ let tmp=JSON.stringify(appData[currentBank][currentPreset]); appData[currentBank][currentPreset]=appData[tb][tp]; appData[tb][tp]=JSON.parse(tmp); buildUI(); refreshEditorUI(); markUnsaved(); } }); }
+  function copyPreset() { openNumpad("Copy Preset\n(Target Bank - Preset)", {type: 'preset'}, (res) => { let tb=res.b, tp=res.p; if(appData[tb]){ appData[tb][tp]=JSON.parse(JSON.stringify(appData[currentBank][currentPreset])); markUnsaved(); } }); }
+  function swapBank() { openNumpad("Swap Bank\n(Target Bank 1-9)", {type: 'number', max: maxBank}, (tb) => { if(tb>=1 && tb<=maxBank && tb!==currentBank){ let tmp=appData[currentBank]; appData[currentBank]=appData[tb]; appData[tb]=tmp; buildUI(); refreshEditorUI(); markUnsaved(); } }); }
+  function copyBank() { openNumpad("Copy Bank\n(Target Bank 1-9)", {type: 'number', max: maxBank}, (tb) => { if(tb>=1 && tb<=maxBank && tb!==currentBank){ appData[tb]=JSON.parse(JSON.stringify(appData[currentBank])); markUnsaved(); } }); }
+  function clearCurrentPreset() { if(confirm("初期化しますか？")) { appData[currentBank][currentPreset] = { name:`PRESET ${currentBank}-${currentPreset}`, rearName:`REAR ${currentBank}-${currentPreset}`, useRear:false, useRearName:false, rearType:'Tog', front:{pc:0, upc:0, cc:Array.from({length:8},()=>({use:false,num:0,val:0}))}, rear:{pc:0, upc:0, cc:Array.from({length:8},()=>({use:false,num:0,val:0}))} }; buildUI(); refreshEditorUI(); markUnsaved(); } }
+  function factoryResetUI() { if(confirm("PC上の全データをリセットしますか？")) { initData(); buildUI(); refreshEditorUI(); markUnsaved(); } }
+  function saveToPC() { let a = document.createElement('a'); a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData)); a.download = "midi_backup.json"; a.click(); }
+  function loadFromPC(e) { let f = e.target.files[0]; if(!f) return; let r = new FileReader(); r.onload=(ev)=>{ try{ appData=JSON.parse(ev.target.result); buildUI(); refreshEditorUI(); alert("Loaded"); }catch(err){alert("Error");}}; r.readAsText(f); }
 
-    function updateTitle() { appData[currentBank][currentPreset].name = document.getElementById('presetTitle').value.toUpperCase(); }
-    function updateRearTitle() { appData[currentBank][currentPreset].rearName = document.getElementById('rearTitleInput').value.toUpperCase(); }
+  function showLoader(m) { document.getElementById('loader-msg').innerText=m; document.getElementById('loader').style.display='flex'; }
+  function hideLoader() { document.getElementById('loader').style.display='none'; }
+  function setStatus(s, m) { document.getElementById('status-badge').innerHTML = `<div class="status-dot" style="background:${s==='ok'?'#6c0':'#f44'}"></div> ${m}`; }
+  function saveGlobalSettings() { let p = { cmd:"save_global", mC:parseInt(document.getElementById('gs-mc').value), mB:parseInt(document.getElementById('gs-mb').value), uM:document.getElementById('usbMidiToggle').checked?1:0 }; maxBank=p.mB; sendBleCommand(p); }
 
-    function toggleRearTitle() {
-        appData[currentBank][currentPreset].useRearName = document.getElementById('useRearTitleToggle').checked;
-        document.getElementById('rearTitleContainer').style.display = appData[currentBank][currentPreset].useRearName ? 'flex' : 'none';
-    }
+  async function loadFromDevice() { if(!rxChar)return; if(!confirm("全データを同期しますか？"))return; try{ for(let b=1; b<=maxBank; b++){ showLoader(`SYNCING BANK ${b}...`); await fetchBankDataBLE(b); await new Promise(r=>setTimeout(r,50)); } buildUI(); refreshEditorUI(); clearUnsaved(); alert("Success"); }catch(e){}finally{hideLoader();} }
+  async function sendAllToDevice() { if(!rxChar)return; if(!confirm("全データを一括送信しますか？"))return; try{ for(let b=1; b<=maxBank; b++){ showLoader(`SENDING BANK ${b}...`); for(let p=1; p<=8; p++){ const d=appData[b][p]; const py={cmd:"save", b:b, p:p, q:true, name:d.name, rName:d.useRearName?d.rearName:d.name, uRn:d.useRearName, uR:d.useRear, isM:d.rearType==='Mom', f:{pc:d.front.pc, upc:d.front.upc, cU:d.front.cc.map(c=>c.use), cN:d.front.cc.map(c=>c.num), cV:d.front.cc.map(c=>c.val)}, r:{pc:d.front.pc, upc:d.front.upc, cU:d.rear.cc.map(c=>c.use), cN:d.rear.cc.map(c=>c.num), cV:d.rear.cc.map(c=>c.val)}}; await sendBleCommand(py); await new Promise(r=>setTimeout(r,50)); } } await sendBleCommand({cmd:"sync_end"}); clearUnsaved(); alert("Success"); }catch(e){}finally{hideLoader();} }
+  async function sendToDevice() {
+    if(!rxChar)return; const btn=document.querySelector('.btn-save-main'); btn.innerText="⏳ Sending...";
+    const d=appData[currentBank][currentPreset];
+    const py={cmd:"save", b:currentBank, p:currentPreset, name:d.name, rName:d.useRearName?d.rearName:d.name, uRn:d.useRearName, uR:d.useRear, isM:d.rearType==='Mom', f:{pc:d.front.pc, upc:d.front.upc, cU:d.front.cc.map(c=>c.use), cN:d.front.cc.map(c=>c.num), cV:d.front.cc.map(c=>c.val)}, r:{pc:d.front.pc, upc:d.front.upc, cU:d.rear.cc.map(c=>c.use), cN:d.rear.cc.map(c=>c.num), cV:d.rear.cc.map(c=>c.val)}};
+    try{ await sendBleCommand(py); clearUnsaved(); btn.innerText="✅ Saved"; }catch(e){ btn.innerText="❌ Failed"; }
+    setTimeout(()=>{ btn.innerText="💾 Save Preset to Device"; if(isSmartphone) closeSheet(); },1500);
+  }
 
-    function toggleUseRear() {
-        const pData = appData[currentBank][currentPreset];
-        const isChecked = document.getElementById('useRearToggle').checked;
-        if (isChecked && !pData.useRear && confirm("Frontの設定をRearにコピーしますか？")) pData.rear = JSON.parse(JSON.stringify(pData.front));
-        pData.useRear = isChecked;
-        refreshEditorUI();
-    }
-
-    function setRearType(type) {
-        appData[currentBank][currentPreset].rearType = type;
-        document.getElementById('btnTog').className = `type-btn ${type === 'Tog' ? 'active' : ''}`;
-        document.getElementById('btnMom').className = `type-btn ${type === 'Mom' ? 'active' : ''}`;
-    }
-
-    function switchTab(tabName) {
-        currentTab = tabName;
-        document.getElementById('tabFront').className = `tab ${tabName === 'front' ? 'active' : ''}`;
-        document.getElementById('tabRear').className = `tab ${tabName === 'rear' ? 'active' : ''}`;
-        document.getElementById('rearControls').classList.toggle('hidden', tabName !== 'rear');
-        refreshEditorUI();
-    }
-
-    function selectPreset(num) {
-        currentPreset = num;
-        document.querySelectorAll('.btn-preset').forEach((b, idx) => b.className = `btn-preset ${idx + 1 === num ? 'active' : ''}`);
-        refreshEditorUI();
-    }
-
-    function changeBank(dir) {
-        currentBank += dir;
-        if(currentBank > 9) currentBank = 1;
-        if(currentBank < 1) currentBank = 9;
-        document.getElementById('displayBank').innerText = `Bank ${currentBank}`;
-        refreshEditorUI();
-    }
-
-    let isConnected = false;
-    function toggleConnect() {
-        const btn = document.getElementById('btnConnect');
-        if (!isConnected) {
-            btn.className = 'btn-connect connected'; btn.innerText = '🟢 Connected'; isConnected = true;
-        } else {
-            btn.className = 'btn-connect'; btn.innerText = 'Connect BLE'; isConnected = false;
-        }
-    }
-
-    initData();
-    buildUI();
-    refreshEditorUI();
+  window.onload = () => { initData(); buildUI(); applyThemeByIdx(); if (!DEBUG_MODE) setUILock(true); };
 </script>
-
 </body>
 </html>
