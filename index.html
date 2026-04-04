@@ -567,7 +567,7 @@
   // App State & UI Logic
   // ==========================================
   let appData = {}; let currentBank = 1; let currentPreset = 1; let maxBank = 9; let currentTab = 'front'; let isUsbMidiEnabled = true;
-  const DEBUG_MODE = true; 
+  const DEBUG_MODE = false; 
 
   function markUnsaved() { const btn = document.querySelector('.btn-save-main'); if (!btn.classList.contains('unsaved')) btn.classList.add('unsaved'); }
   function clearUnsaved() { document.querySelector('.btn-save-main').classList.remove('unsaved'); }
