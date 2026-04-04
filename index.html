@@ -163,36 +163,38 @@
     
     body.mobile-view .accordion { border-radius: 0; border-left: none; border-right: none; margin-bottom: 0; }
 
-    /* ★ CCタイルの巨大化（長方形）と黄色いはみ出し修正 */
+    /* ★ 修正箇所: CCタイルの巨大化（長方形）と黄色いはみ出し修正 */
     body.mobile-view .cc-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; }
-    body.mobile-view .cc-tile { padding: 4px; aspect-ratio: auto; height: 130px; } /* 正方形解除、縦長に */
-    body.mobile-view .cc-tile-header { font-size: 10px; margin-bottom: 4px; }
-    body.mobile-view .cc-tile-body { flex-direction: column; gap: 4px; }
-    body.mobile-view .cc-half-btn { padding: 8px 0; flex-direction: column; justify-content: center; gap: 4px; } /* 上下に大きく */
+    body.mobile-view .cc-tile { padding: 6px; aspect-ratio: auto; height: 130px; } /* 正方形解除、縦長に */
+    body.mobile-view .cc-tile-header { font-size: 10px; margin-bottom: 6px; }
+    body.mobile-view .cc-tile-body { flex-direction: column; gap: 6px; }
+    body.mobile-view .cc-half-btn { padding: 6px 0; flex-direction: column; justify-content: center; gap: 4px; } /* 上下に大きく */
     body.mobile-view .cc-tile-label { margin-bottom: 0; font-size: 9px; }
     body.mobile-view .cc-tile-val { font-size: 16px; }
 
-    /* ★ プリセット設定パネルの横揺れ防止 */
+    /* ★ 修正箇所: ポップアップの横揺れ防止 (幅88%で余裕を持たせ、overflow-xを隠す) */
     .modal-overlay { display: block; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(3px); opacity: 0; pointer-events: none; visibility: hidden; transition: 0.3s; z-index: 99; }
     .modal-overlay.open { opacity: 1; pointer-events: auto; visibility: visible; }
-    
-    /* 幅を微調整、横スクロールを強制禁止 */
     body.mobile-view .right-panel { 
       position: fixed; top: 50%; left: 50%; transform: translate(-50%, -45%) scale(0.95); 
-      width: 90%; max-height: 85vh; border-radius: 12px; z-index: 100; padding: 15px; 
+      width: 88%; max-height: 85vh; border-radius: 12px; z-index: 100; padding: 15px; 
       border: 1px solid var(--main-color-dim); box-shadow: 0 10px 40px rgba(0,0,0,0.8); 
       opacity: 0; pointer-events: none; visibility: hidden; transition: 0.3s; 
-      overflow-x: hidden; /* 横スクロール禁止 */
+      overflow-x: hidden; 
     }
     body.mobile-view .right-panel.open { transform: translate(-50%, -50%) scale(1); opacity: 1; pointer-events: auto; visibility: visible; }
-    
     body.mobile-view .sheet-header-mobile { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
     body.mobile-view .btn-close { background: var(--bg-panel); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
     body.mobile-view .rack-row { flex-wrap: wrap; }
     body.mobile-view .rack-label { width: 100%; margin-bottom: 5px; border-bottom: 1px solid #333; padding-bottom: 5px; }
-    
-    /* ★ 入力欄（PC/U-PC）を左寄せに修正 */
-    body.mobile-view .common-row > div { justify-content: flex-start !important; gap: 15px; }
+
+    /* ★ 修正箇所: 入力欄の左寄せとサイズ調整 */
+    body.mobile-view #presetTitle { 
+      font-size: 18px !important; 
+      margin-left: 0 !important; 
+      padding-left: 0 !important; 
+      text-align: left; 
+    }
 
     #loader { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.9); z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; color: var(--main-color); font-weight: bold; }
 
