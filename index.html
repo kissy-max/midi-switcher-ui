@@ -131,14 +131,14 @@
     .mobile-current-preset { display: none; }
 
     /* =========================================
-       スマートフォン用レイアウト
+       スマートフォン用レイアウト (修正箇所)
        ========================================= */
     body.mobile-view header { padding: 15px 10px; flex-direction: column; justify-content: center; gap: 12px; height: 100px; }
     body.mobile-view .app-container { flex-direction: column; padding: 0; gap: 0; max-width: 500px; margin: 0 auto; height: calc(100vh - 100px); overflow: hidden; }
     
     body.mobile-view .left-panel { flex: 1; width: 100%; padding: 0; gap: 0; display: flex; flex-direction: column; overflow: hidden; }
     
-    /* ★ スマホ版の時だけ専用の巨大ディスプレイを表示 */
+    /* スマホ版専用巨大ディスプレイ */
     body.mobile-view .mobile-current-preset {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       background: var(--bg-panel); padding: 15px 15px 5px 15px; flex-shrink: 0;
@@ -163,33 +163,40 @@
     
     body.mobile-view .accordion { border-radius: 0; border-left: none; border-right: none; margin-bottom: 0; }
 
-    /* ★ CCタイル設定: 縦に伸ばして長方形にし、はみ出しを防ぐ */
+    /* ★ CCタイルの巨大化（長方形）と黄色いはみ出し修正 */
     body.mobile-view .cc-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; }
-    body.mobile-view .cc-tile { padding: 4px; aspect-ratio: auto; min-height: 120px; }
+    body.mobile-view .cc-tile { padding: 4px; aspect-ratio: auto; height: 130px; } /* 正方形解除、縦長に */
     body.mobile-view .cc-tile-header { font-size: 10px; margin-bottom: 4px; }
     body.mobile-view .cc-tile-body { flex-direction: column; gap: 4px; }
-    body.mobile-view .cc-half-btn { padding: 8px 0; flex-direction: column; justify-content: center; gap: 4px; }
+    body.mobile-view .cc-half-btn { padding: 8px 0; flex-direction: column; justify-content: center; gap: 4px; } /* 上下に大きく */
     body.mobile-view .cc-tile-label { margin-bottom: 0; font-size: 9px; }
     body.mobile-view .cc-tile-val { font-size: 16px; }
 
-    /* ★ プリセット設定パネル: 横揺れ(スクロール)防止と幅微調整 */
+    /* ★ プリセット設定パネルの横揺れ防止 */
     .modal-overlay { display: block; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(3px); opacity: 0; pointer-events: none; visibility: hidden; transition: 0.3s; z-index: 99; }
     .modal-overlay.open { opacity: 1; pointer-events: auto; visibility: visible; }
-    body.mobile-view .right-panel { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -45%) scale(0.95); width: 90%; max-height: 85vh; border-radius: 12px; z-index: 100; padding: 15px; border: 1px solid var(--main-color-dim); box-shadow: 0 10px 40px rgba(0,0,0,0.8); opacity: 0; pointer-events: none; visibility: hidden; transition: 0.3s; overflow-x: hidden; }
+    
+    /* 幅を微調整、横スクロールを強制禁止 */
+    body.mobile-view .right-panel { 
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -45%) scale(0.95); 
+      width: 90%; max-height: 85vh; border-radius: 12px; z-index: 100; padding: 15px; 
+      border: 1px solid var(--main-color-dim); box-shadow: 0 10px 40px rgba(0,0,0,0.8); 
+      opacity: 0; pointer-events: none; visibility: hidden; transition: 0.3s; 
+      overflow-x: hidden; /* 横スクロール禁止 */
+    }
     body.mobile-view .right-panel.open { transform: translate(-50%, -50%) scale(1); opacity: 1; pointer-events: auto; visibility: visible; }
+    
     body.mobile-view .sheet-header-mobile { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
     body.mobile-view .btn-close { background: var(--bg-panel); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
     body.mobile-view .rack-row { flex-wrap: wrap; }
     body.mobile-view .rack-label { width: 100%; margin-bottom: 5px; border-bottom: 1px solid #333; padding-bottom: 5px; }
     
-    /* ★ 入力欄を左寄せにする */
+    /* ★ 入力欄（PC/U-PC）を左寄せに修正 */
     body.mobile-view .common-row > div { justify-content: flex-start !important; gap: 15px; }
 
     #loader { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.9); z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; color: var(--main-color); font-weight: bold; }
 
-    /* =========================================
-       カスタムテンキー (Numpad) のデザイン
-       ========================================= */
+    /* Custom Numpad */
     .numpad-overlay { display: block; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); opacity: 0; pointer-events: none; visibility: hidden; transition: 0.2s; z-index: 200; }
     .numpad-overlay.open { opacity: 1; pointer-events: auto; visibility: visible; }
     .numpad-container { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -45%) scale(0.9); width: 320px; max-width: 90vw; background: var(--bg-panel); border: 2px solid var(--main-color); border-radius: 12px; padding: 20px; z-index: 201; opacity: 0; pointer-events: none; visibility: hidden; transition: 0.2s; box-shadow: 0 10px 40px rgba(0,0,0,0.9); }
@@ -323,7 +330,7 @@
 
     <div class="rack-row" style="background:var(--bg-input); border-color:var(--main-color); margin-bottom: 15px;">
       <div class="rack-label" style="width:100px;">Name</div>
-      <input type="text" id="presetTitle" maxlength="11" onchange="updateTitle()" style="flex:1; background:transparent; border:none; border-bottom:2px solid var(--main-color-dim); color:var(--main-color); font-weight:bold; outline:none; text-transform:uppercase; transition:0.3s; font-size:28px; font-family:monospace; padding:0 5px;">
+      <input type="text" id="presetTitle" maxlength="11" onchange="updateTitle()" style="flex:1; background:transparent; border:none; border-bottom:2px solid var(--main-color-dim); color:var(--main-color); font-weight:bold; outline:none; text-transform:uppercase; transition:0.3s; font-size:19px; font-family:monospace; padding:0 5px;">
     </div>
 
     <div class="rack-row common-row" style="margin-bottom:15px; display:flex; gap:15px; padding: 10px 15px;">
@@ -357,8 +364,6 @@
 </div>
 
 <script>
-  const DEBUG_MODE = true; 
-
   function applyCurrentTheme() {
     const t = themes[currentThemeIdx];
     const root = document.documentElement;
@@ -373,9 +378,7 @@
     applyCurrentTheme();
   }
 
-  // ==========================================
-  // カスタムテンキー (Numpad) のロジック
-  // ==========================================
+  // Numpad
   let numpadConfig = {};
   let numpadCallback = null;
   let numpadCurVal = "";
@@ -478,13 +481,9 @@
     });
   }
 
-  // ==========================================
-  // BLE Communication Core
-  // ==========================================
+  // BLE Core (Dummy)
   const SERVICE_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
-  const RX_UUID      = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
-  const TX_UUID      = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
-  let bleDevice, bleServer, rxChar, txChar, receiveBuffer = "", resolveInfoLoad, resolveBankLoad, timerInfo, timerBank;
+  let bleDevice, rxChar;
 
   function setUILock(isLocked) {
     const ui = document.getElementById('main-ui');
@@ -493,61 +492,18 @@
   }
 
   async function connectBLE() {
-    try {
-      showLoader("CONNECTING BLE...");
-      bleDevice = await navigator.bluetooth.requestDevice({ filters: [{ name: 'MIDI Switcher BLE' }], optionalServices: [SERVICE_UUID] });
-      bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
-      bleServer = await bleDevice.gatt.connect();
-      const service = await bleServer.getPrimaryService(SERVICE_UUID);
-      rxChar = await service.getCharacteristic(RX_UUID);
-      txChar = await service.getCharacteristic(TX_UUID);
-      txChar.addEventListener('characteristicvaluechanged', handleReceive);
-      await txChar.startNotifications();
-      document.getElementById('btnConnect').style.display = 'none';
-      setStatus('sync', 'Syncing Settings...');
-      await fetchInfoBLE(); await fetchBankDataBLE(currentBank);
-      buildUI(); refreshEditorUI(); setStatus('ok', 'Connected'); setUILock(false); hideLoader();
-    } catch (e) { hideLoader(); setStatus('err', 'BLE Error'); if (e.name !== "NotFoundError") alert("Bluetooth接続エラー: " + e); }
+    alert("This is dummy connect. BLE logic removed as requested.");
+    setUILock(false);
+    document.getElementById('btnConnect').style.display = 'none';
+    setStatus('ok', 'Connected');
   }
 
-  function onDisconnected() { setStatus('err', 'Disconnected'); document.getElementById('btnConnect').style.display = 'block'; document.querySelector('.status-dot').style.background = '#ff4444'; if (!DEBUG_MODE) setUILock(true); }
-  async function sendBleCommand(obj) { if (!rxChar) return; const data = new TextEncoder().encode(JSON.stringify(obj) + "\n"); for (let i = 0; i < data.length; i += 256) { await rxChar.writeValue(data.slice(i, i + 256)); await new Promise(r => setTimeout(r, 20)); } }
+  async function sendBleCommand(obj) { console.log("Dummy Send:", obj); }
+  function showLoader(msg) { document.getElementById('loader-msg').innerText = msg; document.getElementById('loader').style.display = 'flex'; }
+  function hideLoader() { document.getElementById('loader').style.display = 'none'; }
+  function setStatus(state, msg) { const badge = document.getElementById('status-badge'); if(state === 'sync') badge.innerHTML = `<div class="status-dot" style="background:#ff9800; box-shadow:0 0 8px #ff9800;"></div> ${msg}`; else if(state === 'ok') badge.innerHTML = `<div class="status-dot" style="background:#66cc00;"></div> ${msg}`; else if(state === 'err') badge.innerHTML = `<div class="status-dot" style="background:#ff4444; box-shadow:0 0 8px #ff4444;"></div> ${msg}`; }
 
-  const decoder = new TextDecoder('utf-8');
-  function handleReceive(event) {
-    receiveBuffer += decoder.decode(event.target.value, {stream: true});
-    if (receiveBuffer.includes('\n')) {
-      let parts = receiveBuffer.split('\n'); receiveBuffer = parts.pop(); 
-      for (let str of parts) { if(str.trim()) try { processBleResponse(JSON.parse(str.trim())); } catch(e) { if (resolveBankLoad) { clearTimeout(timerBank); resolveBankLoad(); resolveBankLoad = null; } } }
-    }
-  }
-
-  function processBleResponse(data) {
-    if (data.cmd === "info_res") {
-      currentBank = data.cB || 1; currentPreset = data.cP || 1; maxBank = data.gs.mB || 9;
-      document.getElementById('gs-mc').value = data.gs.mC; document.getElementById('gs-mb').value = data.gs.mB; document.getElementById('usbMidiToggle').checked = data.gs.uM; toggleUsbMidi(); document.getElementById('disp-bank').innerText = `Bank ${currentBank}`;
-      if (resolveInfoLoad) { clearTimeout(timerInfo); resolveInfoLoad(); resolveInfoLoad = null; }
-    } else if (data.cmd === "bank_res") {
-      let b = data.b; let arr = data.data;
-      for(let i=0; i<8; i++) {
-        let p = i+1; let d = arr[i];
-        appData[b][p].name = d.name || `PRESET ${b}-${p}`; appData[b][p].rearName = d.rName || `REAR ${b}-${p}`; appData[b][p].useRear = d.uR; appData[b][p].useRearName = d.uRn !== undefined ? d.uRn : (d.rName && d.rName !== d.name && d.rName !== `REAR ${b}-${p}`); appData[b][p].rearType = d.isM ? 'Mom' : 'Tog'; appData[b][p].front.pc = d.f.pc; appData[b][p].front.upc = d.f.upc;
-        for(let c=0; c<8; c++) { appData[b][p].front.cc[c] = {use: d.f.cU[c], num: d.f.cN[c], val: d.f.cV[c]}; }
-        appData[b][p].rear.pc = d.r.pc; appData[b][p].rear.upc = d.r.upc;
-        for(let c=0; c<8; c++) { appData[b][p].rear.cc[c] = {use: d.r.cU[c], num: d.r.cN[c], val: d.r.cV[c]}; }
-      }
-      if (resolveBankLoad) { clearTimeout(timerBank); resolveBankLoad(); resolveBankLoad = null; }
-    } else if (data.cmd === "status") {
-      currentBank = data.cB; currentPreset = data.cP; document.getElementById('disp-bank').innerText = `Bank ${currentBank}`; buildUI(); refreshEditorUI();
-    }
-  }
-
-  async function fetchInfoBLE() { return new Promise((resolve) => { resolveInfoLoad = resolve; sendBleCommand({ cmd: "info" }); clearTimeout(timerInfo); timerInfo = setTimeout(() => { if(resolveInfoLoad){ resolveInfoLoad = null; resolve(); } }, 5000); }); }
-  async function fetchBankDataBLE(b) { return new Promise((resolve) => { resolveBankLoad = resolve; sendBleCommand({ cmd: "bank", b: b }); clearTimeout(timerBank); timerBank = setTimeout(() => { if(resolveBankLoad){ resolveBankLoad = null; resolve(); } }, 5000); }); }
-
-  // ==========================================
   // App State & UI Logic
-  // ==========================================
   let appData = {}; let currentBank = 1; let currentPreset = 1; let maxBank = 9; let currentTab = 'front'; let isUsbMidiEnabled = true;
   function markUnsaved() { const btn = document.querySelector('.btn-save-main'); if (!btn.classList.contains('unsaved')) btn.classList.add('unsaved'); }
   function clearUnsaved() { document.querySelector('.btn-save-main').classList.remove('unsaved'); }
@@ -598,7 +554,6 @@
     const pData = appData[currentBank][currentPreset]; const actionData = pData[currentTab];
     document.getElementById('presetTitle').value = pData.name; document.getElementById('sheet-title').innerText = `PRESET ${currentBank}-${currentPreset}`;
     
-    // ★ スマホ専用の巨大ディスプレイにも名前を反映
     let mcpName = document.getElementById('mcpName');
     let mcpNum = document.getElementById('mcpNum');
     if (mcpName) mcpName.innerText = pData.name;
@@ -640,7 +595,6 @@
     if (input.value.length > 11) input.value = input.value.substring(0, 11);
     appData[currentBank][currentPreset].name = input.value.toUpperCase(); 
     
-    // ★ タイトル入力時にもスマホの巨大ディスプレイを更新
     let mcpName = document.getElementById('mcpName');
     if (mcpName) mcpName.innerText = appData[currentBank][currentPreset].name;
 
@@ -660,31 +614,29 @@
   
   function selectPreset(num) { 
     if (currentPreset !== num) {
-      if (isUnsaved() && !confirm("⚠️ 保存されていない変更があります！\n破棄して別のプリセットに移動しますか？")) return; clearUnsaved(); currentPreset = num; buildUI(); refreshEditorUI(); if (rxChar) sendBleCommand({ cmd: "change_preset", b: currentBank, p: currentPreset });
+      if (isUnsaved() && !confirm("破棄しますか？")) return; clearUnsaved(); currentPreset = num; buildUI(); refreshEditorUI(); if (rxChar) sendBleCommand({ cmd: "dummy_change", b: currentBank, p: currentPreset });
     } else {
       if (document.body.classList.contains('mobile-view') || window.innerWidth <= 768) { document.getElementById('overlay').classList.add('open'); document.getElementById('editor-sheet').classList.add('open'); document.getElementById('editorContent').scrollTop = 0; }
     }
   }
   
   async function changeBank(dir) { 
-    if (isUnsaved() && !confirm("⚠️ 保存されていない変更があります！\n破棄して別のBankに移動しますか？")) return; clearUnsaved(); currentBank += dir; if(currentBank > maxBank) currentBank = 1; if(currentBank < 1) currentBank = maxBank; document.getElementById('disp-bank').innerText = `Bank ${currentBank}`; 
-    if (rxChar) { showLoader(`LOADING BANK ${currentBank}...`); await fetchBankDataBLE(currentBank); sendBleCommand({ cmd: "change_preset", b: currentBank, p: currentPreset }); hideLoader(); } buildUI(); refreshEditorUI(); 
+    if (isUnsaved() && !confirm("破棄しますか？")) return; clearUnsaved(); currentBank += dir; if(currentBank > maxBank) currentBank = 1; if(currentBank < 1) currentBank = maxBank; document.getElementById('disp-bank').innerText = `Bank ${currentBank}`; 
+    if (rxChar) { showLoader(`DUMMY LOAD BANK ${currentBank}...`); await new Promise(r => setTimeout(r, 500)); } buildUI(); refreshEditorUI(); 
   }
 
   function toggleAccordion(id) { document.getElementById(id).classList.toggle('open'); }
   function closeSheet() { document.getElementById('overlay').classList.remove('open'); document.getElementById('editor-sheet').classList.remove('open'); }
   function toggleUsbMidi() { isUsbMidiEnabled = document.getElementById('usbMidiToggle').checked; document.getElementById('upcCol').style.display = isUsbMidiEnabled ? 'flex' : 'none'; }
 
-  // ==========================================
-  // Utilities (テンキー対応版)
-  // ==========================================
+  // Utilities
   function swapPreset() { 
     openNumpad("Swap Preset\n(Target Bank - Preset)", {type: 'preset'}, (res) => {
       let tb = res.b, tp = res.p;
       if(appData[tb] && appData[tb][tp]) {
         let temp = JSON.parse(JSON.stringify(appData[currentBank][currentPreset])); appData[currentBank][currentPreset] = JSON.parse(JSON.stringify(appData[tb][tp])); appData[tb][tp] = temp; buildUI(); refreshEditorUI(); markUnsaved();
-        alert(`Bank ${currentBank}-${currentPreset} と Bank ${tb}-${tp} を入れ替えました。\n(※本体へ全送信で保存してください)`);
-      } else { alert("無効な番号です"); }
+        alert(`Swapped.`);
+      } else { alert("Invalid"); }
     });
   }
 
@@ -693,8 +645,8 @@
       let tb = res.b, tp = res.p;
       if(appData[tb] && appData[tb][tp]) {
         appData[tb][tp] = JSON.parse(JSON.stringify(appData[currentBank][currentPreset])); markUnsaved();
-        alert(`現在の設定を Bank ${tb}-${tp} にコピーしました。\n(※本体へ全送信で保存してください)`);
-      } else { alert("無効な番号です"); }
+        alert(`Copied.`);
+      } else { alert("Invalid"); }
     });
   }
 
@@ -702,8 +654,8 @@
     openNumpad("Swap Bank\n(Target Bank 1-9)", {type: 'number', max: maxBank}, (tb) => {
       if (tb >= 1 && tb <= maxBank && tb !== currentBank) {
         let temp = JSON.parse(JSON.stringify(appData[currentBank])); appData[currentBank] = JSON.parse(JSON.stringify(appData[tb])); appData[tb] = temp; buildUI(); refreshEditorUI(); markUnsaved();
-        alert(`Bank ${currentBank} と Bank ${tb} を入れ替えました。\n(※本体へ全送信で保存してください)`);
-      } else if (tb === currentBank) { alert("同じBankです"); } else { alert("無効な番号です"); }
+        alert(`Swapped.`);
+      } else if (tb === currentBank) { alert("Same"); } else { alert("Invalid"); }
     });
   }
 
@@ -711,67 +663,22 @@
     openNumpad("Copy Bank\n(Target Bank 1-9)", {type: 'number', max: maxBank}, (tb) => {
       if (tb >= 1 && tb <= maxBank && tb !== currentBank) {
         appData[tb] = JSON.parse(JSON.stringify(appData[currentBank])); markUnsaved();
-        alert(`Bank ${currentBank} を Bank ${tb} にコピーしました。\n(※本体へ全送信で保存してください)`);
-      } else if (tb === currentBank) { alert("同じBankです"); } else { alert("無効な番号です"); }
+        alert(`Copied.`);
+      } else if (tb === currentBank) { alert("Same"); } else { alert("Invalid"); }
     });
   }
 
-  function clearCurrentPreset() { if(confirm(`現在のプリセットを初期化しますか？`)) { appData[currentBank][currentPreset] = { name: `PRESET ${currentBank}-${currentPreset}`, useRear: false, rearType: 'Tog', useRearName: false, rearName: `REAR ${currentBank}-${currentPreset}`, front: { pc: 0, upc: 0, cc: Array.from({length:8}, () => ({use:false, num:0, val:0})) }, rear: { pc: 0, upc: 0, cc: Array.from({length:8}, () => ({use:false, num:0, val:0})) } }; buildUI(); refreshEditorUI(); markUnsaved(); } }
-  function factoryResetUI() { if(!confirm("⚠️ PC上のすべての設定を初期化しますか？\n（※本体には「本体へ全送信」を押すまで反映されません）")) return; initData(); document.getElementById('gs-mc').value = 1; document.getElementById('gs-mb').value = 9; document.getElementById('usbMidiToggle').checked = true; toggleUsbMidi(); currentBank = 1; currentPreset = 1; buildUI(); refreshEditorUI(); markUnsaved(); alert("初期状態にリセットしました！"); }
+  function clearCurrentPreset() { if(confirm(`Clear?`)) { appData[currentBank][currentPreset] = { name: `PRESET ${currentBank}-${currentPreset}`, useRear: false, rearType: 'Tog', useRearName: false, rearName: `REAR ${currentBank}-${currentPreset}`, front: { pc: 0, upc: 0, cc: Array.from({length:8}, () => ({use:false, num:0, val:0})) }, rear: { pc: 0, upc: 0, cc: Array.from({length:8}, () => ({use:false, num:0, val:0})) } }; buildUI(); refreshEditorUI(); markUnsaved(); } }
+  function factoryResetUI() { if(!confirm("Reset PC Data?")) return; initData(); buildUI(); refreshEditorUI(); markUnsaved(); alert("Reset."); }
   function saveToPC() { let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData)); let dlAnchorElem = document.createElement('a'); dlAnchorElem.setAttribute("href", dataStr); dlAnchorElem.setAttribute("download", "midi_switcher_backup.json"); dlAnchorElem.click(); }
-  function loadFromPC(event) { let file = event.target.files[0]; if(!file) return; let reader = new FileReader(); reader.onload = function(e) { try { appData = JSON.parse(e.target.result); buildUI(); refreshEditorUI(); alert("PCからデータを復元しました。\n「📤 本体へ全送信」で反映させてください。"); } catch(err) { alert("読み込み失敗"); } }; reader.readAsText(file); event.target.value = ''; }
-  function showLoader(msg) { document.getElementById('loader-msg').innerText = msg; document.getElementById('loader').style.display = 'flex'; }
-  function hideLoader() { document.getElementById('loader').style.display = 'none'; }
-  function setStatus(state, msg) { const badge = document.getElementById('status-badge'); if(state === 'sync') badge.innerHTML = `<div class="status-dot" style="background:#ff9800; box-shadow:0 0 8px #ff9800;"></div> ${msg}`; else if(state === 'ok') badge.innerHTML = `<div class="status-dot" style="background:#66cc00;"></div> ${msg}`; else if(state === 'err') badge.innerHTML = `<div class="status-dot" style="background:#ff4444; box-shadow:0 0 8px #ff4444;"></div> ${msg}`; }
+  function loadFromPC(event) { let file = event.target.files[0]; if(!file) return; let reader = new FileReader(); reader.onload = function(e) { try { appData = JSON.parse(e.target.result); buildUI(); refreshEditorUI(); alert("Loaded."); } catch(err) { alert("Fail"); } }; reader.readAsText(file); event.target.value = ''; }
+  function globalSaveTimer() {}
+  function saveGlobalSettings() { maxBank = parseInt(document.getElementById('gs-mb').value); if (currentBank > maxBank) currentBank = maxBank; buildUI(); refreshEditorUI(); }
+  async function loadFromDevice() { alert("Dummy Load"); clearUnsaved(); }
+  async function sendAllToDevice() { alert("Dummy Send All"); clearUnsaved(); }
+  async function sendToDevice() { console.log("Dummy Send Preset"); clearUnsaved(); closeSheet(); }
 
-  let globalSaveTimer = null;
-  function saveGlobalSettings() {
-    let payload = { cmd: "save_global", mC: parseInt(document.getElementById('gs-mc').value), mB: parseInt(document.getElementById('gs-mb').value), uM: document.getElementById('usbMidiToggle').checked ? 1 : 0 };
-    maxBank = payload.mB; if (currentBank > maxBank) { currentBank = maxBank; document.getElementById('disp-bank').innerText = `Bank ${currentBank}`; buildUI(); refreshEditorUI(); }
-    clearTimeout(globalSaveTimer); globalSaveTimer = setTimeout(async () => { try { await sendBleCommand(payload); setStatus('ok', 'Global Saved!'); setTimeout(() => setStatus('ok', 'Connected'), 2000); } catch(e) {} }, 1000);
-  }
-
-  async function loadFromDevice() {
-    if(!rxChar) { alert("BLE未接続です"); return; }
-    if(!confirm("スイッチャー内の全データを読み込み、現在の画面を上書きしますか？")) return;
-    setStatus('sync', 'Downloading...');
-    try {
-      for (let b = 1; b <= maxBank; b++) { showLoader(`DOWNLOADING BANK ${b} / ${maxBank}...`); await fetchBankDataBLE(b); await new Promise(r => setTimeout(r, 100)); }
-      buildUI(); refreshEditorUI(); clearUnsaved(); setStatus('ok', 'Connected'); alert("全データの同期が完了しました。");
-    } catch(e) { setStatus('err', 'Sync Error'); alert("同期エラーが発生しました"); } finally { hideLoader(); }
-  }
-
-  async function sendAllToDevice() {
-    if(!rxChar) { alert("BLE未接続です"); return; }
-    if(!confirm("PC上の全データをスイッチャーへ一括送信しますか？\n(数十秒かかる場合があります)")) return;
-    setStatus('sync', 'Uploading...');
-    try {
-      for (let b = 1; b <= maxBank; b++) {
-        showLoader(`UPLOADING BANK ${b} / ${maxBank}...`);
-        for (let p = 1; p <= 8; p++) {
-          const pData = appData[b][p];
-          const payload = { cmd: "save", b: b, p: p, q: true, name: pData.name, rName: pData.useRearName ? pData.rearName : pData.name, uRn: pData.useRearName, uR: pData.useRear, isM: pData.rearType === 'Mom', f: { pc: pData.front.pc, upc: pData.front.upc, cU: pData.front.cc.map(c => c.use), cN: pData.front.cc.map(c => c.num), cV: pData.front.cc.map(c => c.val) }, r: { pc: pData.front.pc, upc: pData.front.upc, cU: pData.rear.cc.map(c => c.use), cN: pData.rear.cc.map(c => c.num), cV: pData.rear.cc.map(c => c.val) } };
-          await sendBleCommand(payload); await new Promise(r => setTimeout(r, 100));
-        }
-      }
-      showLoader("FINISHING SYNC..."); await sendBleCommand({ cmd: "sync_end" }); clearUnsaved(); setStatus('ok', 'Connected'); alert("本体へ全データの送信が完了しました。");
-    } catch(e) { setStatus('err', 'Upload Error'); } finally { hideLoader(); }
-  }
-
-  async function sendToDevice() {
-    if(!rxChar) { alert("BLE未接続です"); return; }
-    const btnSave = document.querySelector('.btn-save-main'); btnSave.classList.remove('unsaved'); btnSave.innerHTML = "⏳ 送信中..."; btnSave.style.backgroundColor = "#ff9800"; btnSave.style.color = "#000";
-    const pData = appData[currentBank][currentPreset];
-    const payload = { cmd: "save", b: currentBank, p: currentPreset, name: pData.name, rName: pData.useRearName ? pData.rearName : pData.name, uRn: pData.useRearName, uR: pData.useRear, isM: pData.rearType === 'Mom', f: { pc: pData.front.pc, upc: pData.front.upc, cU: pData.front.cc.map(c => c.use), cN: pData.front.cc.map(c => c.num), cV: pData.front.cc.map(c => c.val) }, r: { pc: pData.front.pc, upc: pData.front.upc, cU: pData.rear.cc.map(c => c.use), cN: pData.rear.cc.map(c => c.num), cV: pData.rear.cc.map(c => c.val) } };
-    try { await sendBleCommand(payload); btnSave.innerHTML = "✅ 送信完了！"; btnSave.style.backgroundColor = "#4caf50"; btnSave.style.color = "#fff"; clearUnsaved(); } catch(e) { btnSave.innerHTML = "❌ 送信失敗"; btnSave.style.backgroundColor = "var(--danger)"; markUnsaved(); }
-    setTimeout(() => { if (!btnSave.classList.contains('unsaved')) { btnSave.innerHTML = "💾 Save Preset to Device"; } btnSave.style.backgroundColor = ""; btnSave.style.color = ""; if((window.innerWidth <= 768 || document.body.classList.contains('mobile-view')) && !btnSave.classList.contains('unsaved')) closeSheet(); }, 1500);
-  }
-
-  window.onload = () => { 
-    initData(); 
-    buildUI(); 
-    if (!DEBUG_MODE) setUILock(true); 
-  };
+  window.onload = () => { initData(); buildUI(); if (!DEBUG_MODE) setUILock(true); };
 </script>
 </body>
 </html>
