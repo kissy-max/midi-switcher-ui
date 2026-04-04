@@ -110,8 +110,8 @@
     .hidden { display: none !important; }
 
     /* =========================================
-        CC Config のタイルグリッドデザイン (分割タップ型)
-        ========================================= */
+       CC Config のタイルグリッドデザイン (分割タップ型)
+       ========================================= */
     .cc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
     .cc-tile { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; aspect-ratio: 1/1; position: relative; transition: 0.3s; }
     .cc-tile.active { border-color: var(--main-color); background: var(--active-bg); }
@@ -126,13 +126,13 @@
     .cc-tile:not(.active) .cc-half-btn { cursor: not-allowed; opacity: 0.4; }
 
     /* =========================================
-        ★ スマホ版用: 巨大プリセット名表示
-        ========================================= */
+       ★ スマホ版用: 巨大プリセット名表示
+       ========================================= */
     .mobile-current-preset { display: none; }
 
     /* =========================================
-        スマートフォン用レイアウト (修正箇所)
-        ========================================= */
+       スマートフォン用レイアウト (修正箇所)
+       ========================================= */
     body.mobile-view header { padding: 15px 10px; flex-direction: column; justify-content: center; gap: 12px; height: 100px; }
     body.mobile-view .app-container { flex-direction: column; padding: 0; gap: 0; max-width: 500px; margin: 0 auto; height: calc(100vh - 100px); overflow: hidden; }
     
@@ -190,12 +190,6 @@
     body.mobile-view .btn-close { background: var(--bg-panel); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
     body.mobile-view .rack-row { flex-wrap: wrap; }
     body.mobile-view .rack-label { width: 100%; margin-bottom: 5px; border-bottom: 1px solid #333; padding-bottom: 5px; }
-
-    /* ★ Nameラベルとプリセット名入力欄の隙間を「Name」部分だけ特別に狭くする (追加箇所) */
-    body.mobile-view .rack-row:has(input#presetTitle) .rack-label {
-      margin-bottom: 2px; /* 5px -> 2px */
-      padding-bottom: 2px; /* 5px -> 2px */
-    }
     
     /* ★ 入力欄（PC/U-PC）を左寄せに修正 */
     body.mobile-view .common-row > div { justify-content: flex-start !important; gap: 15px; }
