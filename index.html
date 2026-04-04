@@ -32,15 +32,15 @@
     * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background-color: var(--bg-base); color: var(--text-main); margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; overflow-x: hidden; transition: background-color 0.3s; }
     
-    /* Header */
     header { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-bottom: 2px solid var(--border-color); height: 60px; }
     h1 { color: var(--main-color); font-size: 20px; margin: 0; text-transform: uppercase; cursor: pointer; user-select: none; }
     .status-badge { background: var(--bg-panel); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 8px; color: var(--main-color); border: 1px solid var(--main-color-dim); }
     .status-dot { width: 10px; height: 10px; background: #ff4444; border-radius: 50%; }
     .btn-connect { background: var(--main-color); color: #000; border: none; padding: 6px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; }
     
-    /* Layout */
     .app-container { display: flex; gap: 20px; padding: 20px; max-width: 1400px; margin: 0 auto; height: calc(100vh - 60px); overflow: hidden; }
+    
+    /* PC版パネル制御: 左が縮みやすく(3)、右が維持(1) */
     .left-panel { flex: 1 3 350px; display: flex; flex-direction: column; gap: 20px; overflow: hidden; }
     .right-panel { flex: 2 1 600px; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; display: flex; flex-direction: column; overflow: hidden; }
     
@@ -71,7 +71,7 @@
     .tab { flex: 1; text-align: center; padding: 12px; cursor: pointer; color: var(--text-muted); background: var(--bg-card); border-radius: 6px 6px 0 0; }
     .tab.active { background: var(--main-color); color: #000; font-weight: bold; }
     .editor-content { flex-grow: 1; overflow-y: auto; }
-    .rack-row { display: flex; gap: 10px; align-items: center; background: var(--bg-card); padding: 10px 15px; border: 1px solid var(--border-color); border-radius: 4px; margin-bottom: 10px; }
+    .rack-row { display: flex; gap: 15px; align-items: center; background: var(--bg-card); padding: 10px 15px; border: 1px solid var(--border-color); border-radius: 4px; margin-bottom: 10px; }
     .rack-label { width: 50px; font-weight: bold; color: var(--main-color); font-size: 14px; }
     .rack-toggle { -webkit-appearance: none; width: 40px; height: 20px; background: #111; border: 1px solid #555; border-radius: 10px; position: relative; cursor: pointer; outline: none; }
     .rack-toggle:checked { background: var(--active-bg); border-color: var(--main-color); }
@@ -79,7 +79,6 @@
     .rack-toggle::after { content: ''; position: absolute; top: 1px; left: 1px; width: 16px; height: 16px; background: #888; border-radius: 50%; transition: 0.2s; }
     .btn-save-main { background: var(--main-color-dim); color: #fff; border: 1px solid var(--main-color); width: 100%; padding: 15px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
 
-    /* CC Grid (PC Default) */
     .cc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
     .cc-tile { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; }
     .cc-tile.active { border-color: var(--main-color); background: var(--active-bg); }
@@ -91,32 +90,30 @@
     .cc-tile:not(.active) .cc-half-btn { opacity: 0.3; cursor: not-allowed; }
 
     /* =========================================
-       Smartphone Overrides (The Fixed View)
+       Smartphone View
        ========================================= */
-    body.mobile-view header { height: 100px; padding: 15px 10px; flex-direction: column; justify-content: center; gap: 10px; }
+    body.mobile-view header { height: 100px; padding: 15px 10px; flex-direction: column; justify-content: center; gap: 12px; }
     body.mobile-view .app-container { height: calc(100vh - 100px); flex-direction: column; padding: 0; }
     body.mobile-view .mobile-current-preset { display: flex; flex-direction: column; align-items: center; background: var(--bg-panel); padding: 10px; }
     body.mobile-view .mcp-name { font-size: 32px; font-weight: bold; color: var(--main-color); font-family: monospace; }
     
-    /* ★ Settings Panel (Width and Scroll fix) */
+    /* ★ ポップアップの幅とスクロール固定 */
     body.mobile-view .right-panel { 
       position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
       width: 92%; max-height: 90vh; z-index: 100; display: none; 
       border: 1px solid var(--main-color); box-shadow: 0 10px 40px rgba(0,0,0,0.9);
-      overflow-x: hidden; /* ★ 横スクロール禁止 */
+      overflow-x: hidden;
     }
     body.mobile-view .right-panel.open { display: flex; }
     body.mobile-view .sheet-header-mobile { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 
-    /* ★ Left-align inputs in mobile */
-    body.mobile-view .rack-row { justify-content: flex-start; padding: 10px; }
-    body.mobile-view .rack-row > div:last-child { flex: none; display: flex; justify-content: flex-start; }
+    /* ★ 入力欄を左に寄せる (余計な space-between を上書き) */
+    body.mobile-view .rack-row { justify-content: flex-start; }
 
-    /* ★ Large Rectangular CC Tiles in mobile */
-    body.mobile-view .cc-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 0 5px; width: 100%; }
-    body.mobile-view .cc-tile { aspect-ratio: auto; height: 120px; padding: 6px; }
-    body.mobile-view .cc-half-btn { flex-direction: column; gap: 2px; }
-    body.mobile-view .cc-tile-header { font-size: 10px; }
+    /* ★ CCタイルの巨大化（縦に伸ばす） */
+    body.mobile-view .cc-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 0 5px; }
+    body.mobile-view .cc-tile { aspect-ratio: auto; height: 130px; padding: 6px; }
+    body.mobile-view .cc-half-btn { flex-direction: column; gap: 4px; }
     body.mobile-view .cc-tile-val { font-size: 18px; }
 
     /* Modal Overlay */
@@ -180,7 +177,7 @@
     <div class="card"><div class="preset-grid" id="presetGrid"></div></div>
     <div class="left-scroll-area">
       <div class="accordion" id="acc-utils">
-        <div class="acc-header" onclick="toggleAccordion('acc-utils')">Utilities</div>
+        <div class="acc-header" onclick="toggleAccordion('acc-utils')">Preset & Bank Utilities</div>
         <div class="acc-body">
           <div style="display:flex; gap:10px; margin-bottom:10px;"><button class="btn-util" style="margin:0" onclick="swapPreset()">🔄 Swap Pr</button><button class="btn-util" style="margin:0" onclick="copyPreset()">📄 Copy Pr</button></div>
           <button class="btn-danger" style="margin-bottom:15px" onclick="clearCurrentPreset()">🗑️ Clear Preset</button>
@@ -188,7 +185,7 @@
         </div>
       </div>
       <div class="accordion" id="acc-global">
-        <div class="acc-header" onclick="toggleAccordion('acc-global')">Global</div>
+        <div class="acc-header" onclick="toggleAccordion('acc-global')">Global Settings</div>
         <div class="acc-body">
           <div class="form-row-global" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"><label>MIDI CH</label><input type="text" readonly id="gs-mc" class="num-input" value="1" onclick="editWithNumpad('MIDI CH', {max:16}, 'gs-mc', (v)=>{ if(v<1)v=1; document.getElementById('gs-mc').value=v; saveGlobalSettings(); })"></div>
           <div class="form-row-global" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"><label>Max Bank</label><input type="text" readonly id="gs-mb" class="num-input" value="9" onclick="editWithNumpad('Max Bank', {max:9}, 'gs-mb', (v)=>{ if(v<1)v=1; document.getElementById('gs-mb').value=v; saveGlobalSettings(); })"></div>
@@ -196,7 +193,7 @@
         </div>
       </div>
       <div class="accordion" id="acc-sync">
-        <div class="acc-header" onclick="toggleAccordion('acc-sync')">Sync</div>
+        <div class="acc-header" onclick="toggleAccordion('acc-sync')">Data Sync</div>
         <div class="acc-body">
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
             <button class="btn-util" style="margin:0" onclick="saveToPC()">💾 PC Save</button><button class="btn-util" style="margin:0" onclick="document.getElementById('fileInput').click()">📂 PC Load</button>
@@ -215,9 +212,9 @@
       <div class="rack-label" style="width:80px;">Name</div>
       <input type="text" id="presetTitle" maxlength="11" onchange="updateTitle()" style="flex:1; background:transparent; border:none; border-bottom:2px solid var(--main-color-dim); color:var(--main-color); font-weight:bold; outline:none; text-transform:uppercase; font-size:28px; font-family:monospace;">
     </div>
-    <div class="rack-row common-row" style="margin-bottom:15px; display:flex; gap:15px;">
+    <div class="rack-row common-row" style="margin-bottom:15px; display:flex;">
       <div style="display:flex; align-items:center; gap:10px;"><div class="rack-label" style="width:auto;">PC</div><input type="text" readonly class="num-input" id="pcVal" onclick="editWithNumpad('PC Value', {max:127}, 'pcVal', (v)=>updateActionParam('pc', v))"></div>
-      <div id="upcCol" style="display:flex; align-items:center; gap:10px; border-left:1px solid #444; padding-left:15px;"><div class="rack-label" style="width:auto;">U-PC</div><input type="text" readonly class="num-input" id="upcVal" onclick="editWithNumpad('U-PC Value', {max:127}, 'upcVal', (v)=>updateActionParam('upc', v))"></div>
+      <div id="upcCol" style="display:flex; align-items:center; gap:10px; border-left:1px solid #444; padding-left:15px; margin-left:15px;"><div class="rack-label" style="width:auto;">U-PC</div><input type="text" readonly class="num-input" id="upcVal" onclick="editWithNumpad('U-PC Value', {max:127}, 'upcVal', (v)=>updateActionParam('upc', v))"></div>
     </div>
     <div class="tabs"><div class="tab active" id="tabFront" onclick="switchTab('front')">Front</div><div class="tab" id="tabRear" onclick="switchTab('rear')">Rear</div></div>
     <div class="editor-content" id="editorContent">
@@ -228,7 +225,7 @@
           <div class="rack-row"><div class="rack-label" style="width:100px;">Custom</div><input type="checkbox" class="rack-toggle" id="useRearTitleToggle" onchange="toggleRearTitle()"><input type="text" id="rearTitleInput" maxlength="11" onchange="updateRearTitle()" style="flex:1; background:var(--bg-input); border:1px solid var(--border-color); color:var(--main-color); display:none; padding:5px; text-transform:uppercase;"></div>
         </div>
       </div>
-      <h4 id="ccHeader" style="color:var(--text-muted); margin: 0 0 10px 0; border-bottom:1px solid var(--border-color);">CC Configuration</h4>
+      <h4 id="ccHeader" style="color:var(--text-muted); margin: 0 0 10px 0; border-bottom:1px solid var(--border-color);">CC Config (1-8)</h4>
       <div id="ccContainer" class="cc-grid"></div>
     </div>
     <button class="btn-save-main" style="margin-top:15px" onclick="sendToDevice()">💾 Save to Device</button>
@@ -241,15 +238,11 @@
 
   function cycleTheme() { currentThemeIdx = (currentThemeIdx + 1) % themes.length; localStorage.setItem('savedThemeIdx', currentThemeIdx); const t = themes[currentThemeIdx]; const r = document.documentElement; r.style.setProperty('--main-color', t.main); r.style.setProperty('--main-color-dim', t.dim); r.style.setProperty('--active-bg', t.bg); buildUI(); refreshEditorUI(); }
 
-  // Numpad
+  // Numpad Logic
   let numpadConfig = {}, numpadCallback = null, numpadCurVal = "";
   function openNumpad(title, config, cb) { document.getElementById('numpad-title').innerText = title; numpadConfig = config; numpadCallback = cb; numpadCurVal = ""; updateNumpadDisp(); document.getElementById('numpad-bg').classList.add('open'); document.getElementById('numpad-modal').classList.add('open'); document.addEventListener('keydown', handleNumpadKey); }
   function closeNumpad() { document.getElementById('numpad-bg').classList.remove('open'); document.getElementById('numpad-modal').classList.remove('open'); document.removeEventListener('keydown', handleNumpadKey); }
-  function numpadPress(n) {
-    if (numpadConfig.type === 'preset') { if (numpadCurVal.length === 0) { if (n >= 1 && n <= maxBank) numpadCurVal += n.toString(); } else if (numpadCurVal.length === 1) { if (n >= 1 && n <= 8) numpadCurVal += n.toString(); } }
-    else { let next = numpadCurVal + n.toString(); if (parseInt(next) > numpadConfig.max) next = numpadConfig.max.toString(); if (next.length > 1 && next.startsWith("0")) next = parseInt(next).toString(); numpadCurVal = next; }
-    updateNumpadDisp();
-  }
+  function numpadPress(n) { if (numpadConfig.type === 'preset') { if (numpadCurVal.length === 0) { if (n >= 1 && n <= maxBank) numpadCurVal += n.toString(); } else if (numpadCurVal.length === 1) { if (n >= 1 && n <= 8) numpadCurVal += n.toString(); } } else { let next = numpadCurVal + n.toString(); if (parseInt(next) > numpadConfig.max) next = numpadConfig.max.toString(); if (next.length > 1 && next.startsWith("0")) next = parseInt(next).toString(); numpadCurVal = next; } updateNumpadDisp(); }
   function numpadBS() { numpadCurVal = numpadCurVal.slice(0, -1); updateNumpadDisp(); }
   function numpadClear() { numpadCurVal = ""; updateNumpadDisp(); }
   function numpadOK() { if (numpadConfig.type === 'preset' && numpadCurVal.length !== 2) return; let v = numpadConfig.type === 'preset' ? {b:parseInt(numpadCurVal[0]), p:parseInt(numpadCurVal[1])} : (parseInt(numpadCurVal) || 0); closeNumpad(); if (numpadCallback) numpadCallback(v); }
@@ -264,6 +257,7 @@
     try {
       showLoader("CONNECTING...");
       bleDevice = await navigator.bluetooth.requestDevice({ filters: [{ name: 'MIDI Switcher BLE' }], optionalServices: ["6e400001-b5a3-f393-e0a9-e50e24dcca9e"] });
+      bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
       bleServer = await bleDevice.gatt.connect();
       const service = await bleServer.getPrimaryService("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
       rxChar = await service.getCharacteristic("6e400002-b5a3-f393-e0a9-e50e24dcca9e");
@@ -349,7 +343,7 @@
   function setStatus(s, m) { document.getElementById('status-badge').innerHTML = `<div class="status-dot" style="background:${s==='ok'?'#6c0':'#f44'}"></div> ${m}`; }
   function saveGlobalSettings() { let p = { cmd:"save_global", mC:parseInt(document.getElementById('gs-mc').value), mB:parseInt(document.getElementById('gs-mb').value), uM:document.getElementById('usbMidiToggle').checked?1:0 }; maxBank=p.mB; sendBleCommand(p); }
   async function loadFromDevice() { if(!rxChar)return; if(!confirm("Sync All?"))return; try{ for(let b=1; b<=maxBank; b++){ showLoader(`SYNC BANK ${b}...`); await fetchBankDataBLE(b); await new Promise(r=>setTimeout(r,50)); } buildUI(); refreshEditorUI(); clearUnsaved(); alert("Success"); }catch(e){}finally{hideLoader();} }
-  async function sendAllToDevice() { if(!rxChar)return; if(!confirm("Upload All?"))return; try{ for(let b=1; b<=maxBank; b++){ showLoader(`SENDING BANK ${b}...`); for(let p=1; p<=8; p++){ const d=appData[b][p]; const py={cmd:"save", b:b, p:p, q:true, name:d.name, rName:d.useRearName?d.rearName:d.name, uRn:d.useRearName, uR:d.useRear, isM:d.rearType==='Mom', f:{pc:d.front.pc, upc:d.front.upc, cU:d.front.cc.map(c=>c.use), cN:d.front.cc.map(c=>c.num), cV:d.front.cc.map(c=>c.val)}, r:{pc:d.front.pc, upc:d.front.upc, cU:d.rear.cc.map(c=>c.use), cN:d.rear.cc.map(c=>c.num), cV:d.rear.cc.map(c=>c.val)}}; await sendBleCommand(py); await new Promise(r=>setTimeout(r,50)); } } await sendBleCommand({cmd:"sync_end"}); clearUnsaved(); alert("Success"); }catch(e){}finally{hideLoader();} }
+  async function sendAllToDevice() { if(!rxChar)return; if(!confirm("Upload All?"))return; try{ for(let b=1; b<=maxBank; b++){ showLoader(`SENDING BANK ${b}...`); for(let p=1; p<=8; p++){ const d=appData[b][p]; const py={cmd:"save", b:b, p:p, q:true, name:d.name, rName:d.useRearName?d.rearName:d.name, uRn:d.useRearName, uR:d.uR, isM:d.rearType==='Mom', f:{pc:d.front.pc, upc:d.front.upc, cU:d.front.cc.map(c=>c.use), cN:d.front.cc.map(c=>c.num), cV:d.front.cc.map(c=>c.val)}, r:{pc:d.front.pc, upc:d.front.upc, cU:d.rear.cc.map(c=>c.use), cN:d.rear.cc.map(c=>c.num), cV:d.rear.cc.map(c=>c.val)}}; await sendBleCommand(py); await new Promise(r=>setTimeout(r,50)); } } await sendBleCommand({cmd:"sync_end"}); clearUnsaved(); alert("Success"); }catch(e){}finally{hideLoader();} }
   async function sendToDevice() { if(!rxChar)return; const btn=document.querySelector('.btn-save-main'); btn.innerText="⏳ Sending..."; const d=appData[currentBank][currentPreset]; const py={cmd:"save", b:currentBank, p:currentPreset, name:d.name, rName:d.useRearName?d.rearName:d.name, uRn:d.useRearName, uR:d.useRear, isM:d.rearType==='Mom', f:{pc:d.front.pc, upc:d.front.upc, cU:d.front.cc.map(c=>c.use), cN:d.front.cc.map(c=>c.num), cV:d.front.cc.map(c => c.val)}, r:{pc:d.front.pc, upc:d.front.upc, cU:d.rear.cc.map(c => c.use), cN:d.rear.cc.map(c => c.num), cV:d.rear.cc.map(c => c.val)}}; try{ await sendBleCommand(py); clearUnsaved(); btn.innerText="✅ Saved"; }catch(e){ btn.innerText="❌ Failed"; } setTimeout(()=>{ btn.innerText="💾 Save to Device"; if(isSmartphone) closeSheet(); },1500); }
 
   window.onload = () => { initData(); buildUI(); if (!DEBUG_MODE) setUILock(true); };
