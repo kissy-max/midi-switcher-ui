@@ -315,6 +315,10 @@
             <label>USB MIDI</label>
             <input type="checkbox" class="rack-toggle" id="usbMidiToggle" onchange="toggleUsbMidi(); saveGlobalSettings();" checked>
           </div>
+          <div class="form-row-global">
+            <label>USB MIDI CH</label>
+            <input type="text" readonly id="gs-uc" class="num-input" value="1" onclick="editWithNumpad('USB MIDI CH (1-16)', {type:'number', max:16}, 'gs-uc', (v)=>{ if(v<1)v=1; document.getElementById('gs-uc').value=v; saveGlobalSettings(); })">
+          </div>
         </div>
       </div>
 
@@ -543,7 +547,7 @@
   function processBleResponse(data) {
     if (data.cmd === "info_res") {
       currentBank = data.cB || 1; currentPreset = data.cP || 1; maxBank = data.gs.mB || 9;
-      document.getElementById('gs-mc').value = data.gs.mC; document.getElementById('gs-mb').value = data.gs.mB; document.getElementById('usbMidiToggle').checked = data.gs.uM; toggleUsbMidi(); document.getElementById('disp-bank').innerText = `Bank ${currentBank}`;
+      document.getElementById('gs-mc').value = data.gs.mC; document.getElementById('gs-mb').value = data.gs.mB; document.getElementById('usbMidiToggle').checked = data.gs.uM; document.getElementById('gs-uc').value = data.gs.uC || 1; toggleUsbMidi(); document.getElementById('disp-bank').innerText = `Bank ${currentBank}`;
       if (resolveInfoLoad) { clearTimeout(timerInfo); resolveInfoLoad(); resolveInfoLoad = null; }
     } else if (data.cmd === "bank_res") {
       let b = data.b; let arr = data.data;
@@ -691,7 +695,7 @@
 
   function toggleAccordion(id) { document.getElementById(id).classList.toggle('open'); }
   function closeSheet() { document.getElementById('overlay').classList.remove('open'); document.getElementById('editor-sheet').classList.remove('open'); }
-  function toggleUsbMidi() { isUsbMidiEnabled = document.getElementById('usbMidiToggle').checked; document.getElementById('upcCol').style.display = isUsbMidiEnabled ? 'flex' : 'none'; }
+  function toggleUsbMidi() { isUsbMidiEnabled = document.getElementById('usbMidiToggle').checked; document.getElementById('upcCol').style.display = isUsbMidiEnabled ? 'flex' : 'none'; document.getElementById('gs-uc').disabled = !isUsbMidiEnabled; }
 
   // ==========================================
   // Utilities (テンキー対応版)
@@ -735,7 +739,7 @@
   }
 
   function clearCurrentPreset() { if(confirm(`現在のプリセットを初期化しますか？`)) { appData[currentBank][currentPreset] = { name: `PRESET ${currentBank}-${currentPreset}`, useRear: false, rearType: 'Tog', useRearName: false, rearName: `REAR ${currentBank}-${currentPreset}`, front: { pc: 0, upc: 0, cc: Array.from({length:8}, () => ({use:false, num:0, val:0})) }, rear: { pc: 0, upc: 0, cc: Array.from({length:8}, () => ({use:false, num:0, val:0})) } }; buildUI(); refreshEditorUI(); markUnsaved(); } }
-  function factoryResetUI() { if(!confirm("⚠️ PC上のすべての設定を初期化しますか？\n（※本体には「本体へ全送信」を押すまで反映されません）")) return; initData(); document.getElementById('gs-mc').value = 1; document.getElementById('gs-mb').value = 9; document.getElementById('usbMidiToggle').checked = true; toggleUsbMidi(); currentBank = 1; currentPreset = 1; buildUI(); refreshEditorUI(); markUnsaved(); alert("初期状態にリセットしました！"); }
+  function factoryResetUI() { if(!confirm("⚠️ PC上のすべての設定を初期化しますか？\n（※本体には「本体へ全送信」を押すまで反映されません）")) return; initData(); document.getElementById('gs-mc').value = 1; document.getElementById('gs-mb').value = 9; document.getElementById('gs-uc').value = 1; document.getElementById('usbMidiToggle').checked = true; toggleUsbMidi(); currentBank = 1; currentPreset = 1; buildUI(); refreshEditorUI(); markUnsaved(); alert("初期状態にリセットしました！"); }
   function saveToPC() { let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData)); let dlAnchorElem = document.createElement('a'); dlAnchorElem.setAttribute("href", dataStr); dlAnchorElem.setAttribute("download", "midi_switcher_backup.json"); dlAnchorElem.click(); }
   function loadFromPC(event) { let file = event.target.files[0]; if(!file) return; let reader = new FileReader(); reader.onload = function(e) { try { appData = JSON.parse(e.target.result); buildUI(); refreshEditorUI(); alert("PCからデータを復元しました。\n「📤 本体へ全送信」で反映させてください。"); } catch(err) { alert("読み込み失敗"); } }; reader.readAsText(file); event.target.value = ''; }
   function showLoader(msg) { document.getElementById('loader-msg').innerText = msg; document.getElementById('loader').style.display = 'flex'; }
@@ -744,7 +748,7 @@
 
   let globalSaveTimer = null;
   function saveGlobalSettings() {
-    let payload = { cmd: "save_global", mC: parseInt(document.getElementById('gs-mc').value), mB: parseInt(document.getElementById('gs-mb').value), uM: document.getElementById('usbMidiToggle').checked ? 1 : 0 };
+    let payload = { cmd: "save_global", mC: parseInt(document.getElementById('gs-mc').value), mB: parseInt(document.getElementById('gs-mb').value), uM: document.getElementById('usbMidiToggle').checked ? 1 : 0, uC: parseInt(document.getElementById('gs-uc').value) };
     maxBank = payload.mB; if (currentBank > maxBank) { currentBank = maxBank; document.getElementById('disp-bank').innerText = `Bank ${currentBank}`; buildUI(); refreshEditorUI(); }
     clearTimeout(globalSaveTimer); globalSaveTimer = setTimeout(async () => { try { await sendBleCommand(payload); setStatus('ok', 'Global Saved!'); setTimeout(() => setStatus('ok', 'Connected'), 2000); } catch(e) {} }, 1000);
   }
