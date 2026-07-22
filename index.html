@@ -616,7 +616,7 @@
 
   function processBleResponse(data) {
     if (data.cmd === "info_res") {
-      currentBank = data.cB || 1; currentPreset = data.cP || 1; maxBank = data.gs.mB || 9;
+      currentBank = Math.max(1, Math.min(MAX_BANK_COUNT, Number(data.cB) || 1)); currentPreset = Math.max(1, Math.min(8, Number(data.cP) || 1)); maxBank = Math.max(1, Math.min(MAX_BANK_COUNT, Number(data.gs.mB) || MAX_BANK_COUNT));
       document.getElementById('gs-mc').value = data.gs.mC; document.getElementById('gs-mb').value = data.gs.mB; document.getElementById('usbMidiToggle').checked = data.gs.uM; document.getElementById('gs-uc').value = data.gs.uC || 1; toggleUsbMidi(); document.getElementById('disp-bank').innerText = `Bank ${currentBank}`;
       if (resolveInfoLoad) { clearTimeout(timerInfo); resolveInfoLoad(); resolveInfoLoad = null; }
     } else if (data.cmd === "bank_res") {
@@ -650,6 +650,7 @@
   // ==========================================
   const MIDI_CC_SLOT_COUNT = 16;
   const UAFX_SLOT_COUNT = 16;
+  const MAX_BANK_COUNT = 9;
   const UAFX_PARAMS = [
     {name:'Bypass',cc:19,max:2,options:['Bypass','Unbypass Left FS','Unbypass Right FS']},
     {name:'Channel Select',cc:17,max:2,options:['Clean','Orange','Red']},
@@ -673,7 +674,7 @@
 
   function initData() {
     appData = {};
-    for (let b = 1; b <= 99; b++) { appData[b] = {}; for (let p = 1; p <= 8; p++) { appData[b][p] = { name: `PRESET ${b}-${p}`, useRear: false, rearType: 'Tog', useRearName: false, rearName: `REAR ${b}-${p}`, front: { pc: 0, upc: 0, uafx:255, cc: Array.from({length:MIDI_CC_SLOT_COUNT}, () => ({use:false, num:0, val:0})) }, rear: { pc: 0, upc: 0, uafx:255, cc: Array.from({length:MIDI_CC_SLOT_COUNT}, () => ({use:false, num:0, val:0})) } }; } }
+    for (let b = 1; b <= MAX_BANK_COUNT; b++) { appData[b] = {}; for (let p = 1; p <= 8; p++) { appData[b][p] = { name: `PRESET ${b}-${p}`, useRear: false, rearType: 'Tog', useRearName: false, rearName: `REAR ${b}-${p}`, front: { pc: 0, upc: 0, uafx:255, cc: Array.from({length:MIDI_CC_SLOT_COUNT}, () => ({use:false, num:0, val:0})) }, rear: { pc: 0, upc: 0, uafx:255, cc: Array.from({length:MIDI_CC_SLOT_COUNT}, () => ({use:false, num:0, val:0})) } }; } }
     uafxSlots = Array.from({length:UAFX_SLOT_COUNT}, (_, i) => defaultUafxSlot(i));
   }
 
@@ -691,7 +692,7 @@
   }
 
   function normalizeAppData() {
-    for (let b=1;b<=99;b++) for (let p=1;p<=8;p++) {
+    for (let b=1;b<=MAX_BANK_COUNT;b++) for (let p=1;p<=8;p++) {
       const item=appData?.[b]?.[p]; if(!item) continue;
       for (const side of ['front','rear']) if(item[side]) {
         item[side].uafx = Number.isInteger(item[side].uafx) && item[side].uafx < UAFX_SLOT_COUNT ? item[side].uafx : 255;
@@ -762,8 +763,8 @@
     if (mcpName) mcpName.innerText = pData.name;
     if (mcpNum) mcpNum.innerText = `${currentBank}-${currentPreset}`;
 
-    document.getElementById('pcVal').value = pData.front.pc;
-    document.getElementById('upcVal').value = pData.front.upc;
+    document.getElementById('pcVal').value = actionData.pc;
+    document.getElementById('upcVal').value = actionData.upc;
     document.getElementById('useRearToggle').checked = pData.useRear; document.getElementById('btnTog').className = `seg-btn ${pData.rearType === 'Tog' ? 'active' : ''}`; document.getElementById('btnMom').className = `seg-btn ${pData.rearType === 'Mom' ? 'active' : ''}`;
     document.getElementById('useRearTitleToggle').checked = pData.useRearName; document.getElementById('rearTitleInput').value = pData.rearName; document.getElementById('rearTitleInput').style.display = pData.useRearName ? 'block' : 'none';
     for (let i = 0; i < MIDI_CC_SLOT_COUNT; i++) {
@@ -786,8 +787,7 @@
 
   function updateActionParam(param, val) { 
     val = parseInt(val) || 0; if(val > 127) val = 127; if(val < 0) val = 0; 
-    if (param === 'pc' || param === 'upc') { appData[currentBank][currentPreset].front[param] = val; appData[currentBank][currentPreset].rear[param] = val; } 
-    else { appData[currentBank][currentPreset][currentTab][param] = val; }
+    appData[currentBank][currentPreset][currentTab][param] = val;
     document.getElementById(`${param}Val`).value = val; markUnsaved(); 
   }
   
@@ -968,7 +968,7 @@
 
   let globalSaveTimer = null;
   function saveGlobalSettings() {
-    let payload = { cmd: "save_global", mC: parseInt(document.getElementById('gs-mc').value), mB: parseInt(document.getElementById('gs-mb').value), uM: document.getElementById('usbMidiToggle').checked ? 1 : 0, uC: parseInt(document.getElementById('gs-uc').value) };
+    let payload = { cmd: "save_global", mC: Math.max(1, Math.min(16, parseInt(document.getElementById('gs-mc').value) || 1)), mB: Math.max(1, Math.min(MAX_BANK_COUNT, parseInt(document.getElementById('gs-mb').value) || 1)), uM: document.getElementById('usbMidiToggle').checked ? 1 : 0, uC: Math.max(1, Math.min(16, parseInt(document.getElementById('gs-uc').value) || 1)) };
     maxBank = payload.mB; if (currentBank > maxBank) { currentBank = maxBank; document.getElementById('disp-bank').innerText = `Bank ${currentBank}`; buildUI(); refreshEditorUI(); }
     clearTimeout(globalSaveTimer); globalSaveTimer = setTimeout(async () => { try { await sendBleCommand(payload); setStatus('ok', 'Global Saved!'); setTimeout(() => setStatus('ok', 'Connected'), 2000); } catch(e) {} }, 1000);
   }
@@ -1012,7 +1012,7 @@
   }
 
   function makePresetPayload(b,p,quiet=false) {
-    const d=appData[b][p]; return {cmd:'save',b,p,q:quiet,uf:d.front.uafx,ur:d.rear.uafx,name:d.name,rName:d.useRearName?d.rearName:d.name,uRn:d.useRearName,uR:d.useRear,isM:d.rearType==='Mom',f:{pc:d.front.pc,upc:d.front.upc,cU:d.front.cc.map(c=>c.use),cN:d.front.cc.map(c=>c.num),cV:d.front.cc.map(c=>c.val)},r:{pc:d.front.pc,upc:d.front.upc,cU:d.rear.cc.map(c=>c.use),cN:d.rear.cc.map(c=>c.num),cV:d.rear.cc.map(c=>c.val)}};
+    const d=appData[b][p]; return {cmd:'save',b,p,q:quiet,uf:d.front.uafx,ur:d.rear.uafx,name:d.name,rName:d.useRearName?d.rearName:d.name,uRn:d.useRearName,uR:d.useRear,isM:d.rearType==='Mom',f:{pc:d.front.pc,upc:d.front.upc,cU:d.front.cc.map(c=>c.use),cN:d.front.cc.map(c=>c.num),cV:d.front.cc.map(c=>c.val)},r:{pc:d.rear.pc,upc:d.rear.upc,cU:d.rear.cc.map(c=>c.use),cN:d.rear.cc.map(c=>c.num),cV:d.rear.cc.map(c=>c.val)}};
   }
 
   window.onload = () => { 
